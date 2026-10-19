@@ -82,7 +82,7 @@ function themeVariables(colors, panelOpacity = 1) {
         "--text-2": mixColors(c.text, c.panel, 0.28),
         "--text-muted": c.muted,
         "--text-faint": mixColors(c.muted, c.panel, 0.3),
-        "--panel-blur": o < 1 ? "14px" : "0px"
+        "--panel-blur": o < 1 ? "6px" : "0px"
     };
 }
 

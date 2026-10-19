@@ -3902,22 +3902,28 @@ body.productivity-on .analytics.prod-only {
 }
 
 .bg-glow .glow-wide {
-    stroke-width: 9;
-    opacity: 0.12;
-    filter: blur(6px);
+    stroke-width: 16;
+    opacity: 0.16;
+    filter: blur(10px);
+}
+
+.bg-glow .glow-echo {
+    stroke-width: 1;
+    opacity: 0.28;
+    stroke-dasharray: 1 5;
 }
 
 .bg-glow .glow-line {
-    stroke-width: 1.4;
-    opacity: 0.75;
-    filter: drop-shadow(0 0 4px currentColor);
+    stroke-width: 1.8;
+    opacity: 0.85;
+    filter: drop-shadow(0 0 6px currentColor);
     animation: glowBreath 6s ease-in-out infinite;
 }
 
 .bg-glow .glow-spark {
     stroke: #ffffff;
     stroke-width: 1.6;
-    stroke-dasharray: 2 120;
+    stroke-dasharray: 3 260;
     opacity: 0.8;
     animation: glowSpark 9s linear infinite;
 }

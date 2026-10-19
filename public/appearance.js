@@ -501,9 +501,6 @@ function drawGlow() {
 
     const max = Math.max(...values, 1);
     const minVisible = max * 0.04;
-    const x = i => (i / (n - 1)) * w;
-    const base = h * 0.9;
-    const y = v => base - (v / max) * h * 0.42;
 
     // Разбиваем на «живые» участки — без длинной прямой по нулю
     const runs = [];
@@ -521,19 +518,57 @@ function drawGlow() {
     });
     if (run) runs.push({ ...run, to: Math.min(n - 1, run.to + 1) });
 
+    // Склеиваем живые участки в одну плавную волну на всю ширину экрана:
+    // пустые часы выкидываем, между участками остаётся только мягкая впадинка.
+    const seq = [];
+    runs.forEach((r, k) => {
+        if (k > 0) seq.push(minVisible * 0.5, minVisible * 0.5);
+        for (let i = r.from; i <= r.to; i++) seq.push(values[i]);
+    });
+
     const intensity = userAppearance.glow.intensity;
     const color = themeAccent();
+    const main = [];
+    const echo = [];
 
-    const paths = runs.map(r => {
-        const pts = [];
-        for (let i = r.from; i <= r.to; i++) pts.push([x(i), y(values[i])]);
-        return pts.length > 1 ? smoothPath(pts) : "";
-    }).filter(Boolean);
+    if (seq.length > 1) {
+
+        // Ещё одно мягкое сглаживание уже по склеенной волне + ровно ~90 точек
+        const points = 90;
+        const sig = Math.max(1, seq.length / 70);
+        const sample = pos => {
+            let acc = 0, wsum = 0;
+            const from = Math.max(0, Math.floor(pos - 3 * sig));
+            const to = Math.min(seq.length - 1, Math.ceil(pos + 3 * sig));
+            for (let j = from; j <= to; j++) {
+                const kv = Math.exp(-((j - pos) ** 2) / (2 * sig * sig));
+                acc += seq[j] * kv;
+                wsum += kv;
+            }
+            return wsum ? acc / wsum : 0;
+        };
+
+        const wave = [];
+        for (let k = 0; k < points; k++) wave.push(sample((k / (points - 1)) * (seq.length - 1)));
+        const peak = Math.max(...wave, 1e-6);
+
+        const margin = w * 0.015;
+        const base = h * 0.94;
+        const amp = h * 0.62;
+        const px = k => margin + (k / (points - 1)) * (w - margin * 2);
+        // Небольшая «дыхательная» волна сверху, чтобы линия не лежала плоско
+        const py = (v, k, scale) => base - (0.08 + 0.92 * (v / peak)) * amp * scale
+            - Math.sin(k / points * Math.PI * 3) * h * 0.025 * scale;
+
+        main.push(smoothPath(wave.map((v, k) => [px(k), py(v, k, 1)])));
+        echo.push(smoothPath(wave.map((v, k) => [px(k), py(v, k, 0.55)])));
+    }
 
     bgGlow.setAttribute("viewBox", `0 0 ${w} ${h}`);
     bgGlow.style.color = color;
     bgGlow.style.opacity = intensity;
-    bgGlow.innerHTML = paths.map((d, i) => `
+    bgGlow.innerHTML = main.map((d, i) => `
+        <path class="glow-echo" d="${echo[i]}" stroke="${color}"/>
         <path class="glow-wide" d="${d}" stroke="${color}"/>
         <path class="glow-line" d="${d}" stroke="${color}"/>
         <path class="glow-spark" d="${d}" style="animation-delay:${-i * 1.7}s"/>`).join("");
@@ -678,6 +713,9 @@ function fillAppearanceForm() {
     // Неоновый график
     $("#glowToggle").checked = a.glow.enabled;
     $("#glowIntensity").value = a.glow.intensity;
+    $("#glowPanelOpacity").value = a.panelOpacity;
+    $("#glowPanelOpacityValue").textContent = `${Math.round(a.panelOpacity * 100)}%`;
+    $("#glowBody").hidden = !(a.glow.enabled && productivityOn);
     $("#glowHint").textContent = productivityOn
         ? "Draws only the moments you were actually working during the last 7 days."
         : "Turn on productivity analysis (Settings → Productivity) to use this background.";
@@ -712,6 +750,8 @@ function renderCharmList() {
 $("#panelOpacity").addEventListener("input", (event) => {
     userAppearance.panelOpacity = Number(event.target.value);
     $("#panelOpacityValue").textContent = `${Math.round(userAppearance.panelOpacity * 100)}%`;
+    $("#glowPanelOpacity").value = userAppearance.panelOpacity;
+    $("#glowPanelOpacityValue").textContent = `${Math.round(userAppearance.panelOpacity * 100)}%`;
     applyThemeColors(userAppearance);
     saveAppearance();
 });
@@ -910,7 +950,22 @@ $("#charmShuffle").addEventListener("click", () => {
 // Неоновый график
 $("#glowToggle").addEventListener("change", (event) => {
     userAppearance.glow.enabled = event.target.checked;
+    // Первое включение — сразу делаем окна полупрозрачными, чтобы волну было видно
+    if (event.target.checked && userAppearance.panelOpacity >= 1) {
+        userAppearance.panelOpacity = 0.6;
+        applyThemeColors(userAppearance);
+    }
     updateGlow();
+    fillAppearanceForm();
+    saveAppearance();
+});
+
+$("#glowPanelOpacity").addEventListener("input", (event) => {
+    userAppearance.panelOpacity = Number(event.target.value);
+    $("#panelOpacity").value = userAppearance.panelOpacity;
+    $("#panelOpacityValue").textContent = `${Math.round(userAppearance.panelOpacity * 100)}%`;
+    $("#glowPanelOpacityValue").textContent = `${Math.round(userAppearance.panelOpacity * 100)}%`;
+    applyThemeColors(userAppearance);
     saveAppearance();
 });
 
