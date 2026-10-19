@@ -91,12 +91,17 @@ function marksStripHtml(task, mode = "owner") {
             color = isMe ? (sharesData.myColor || mark.color) : mark.color;
         }
 
-        const text = `${MARK_TEXT[mark.type] || mark.type} by ${name}`;
+        const label = MARK_TEXT[mark.type] || mark.type;
+        const when = mark.at ? new Date(mark.at).toLocaleString("uk-UA", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "";
 
         return `
-            <div class="mark-strip ${mark.type}" style="--mark:${escapeHtml(color || "#b69cff")}" title="${escapeHtml(text)}">
-                <span>${escapeHtml(text)}</span>
-                ${mode === "owner" ? `<button type="button" class="mark-remove" data-user="${escapeHtml(mark.userId)}" title="Remove this mark" aria-label="Remove this mark">×</button>` : ""}
+            <div class="mark-strip ${mark.type}" style="--mark:${escapeHtml(color || "#b69cff")}"
+                 data-tip-type="${escapeHtml(mark.type)}" data-tip-name="${escapeHtml(name)}" data-tip-when="${escapeHtml(when)}">
+                <span class="mark-lines">
+                    <span class="mark-line">${escapeHtml(label)}</span>
+                    <span class="mark-line by">by ${escapeHtml(name)}</span>
+                </span>
+                ${mode === "owner" ? `<button type="button" class="mark-remove" data-user="${escapeHtml(mark.userId)}" aria-label="Remove this mark">×</button>` : ""}
             </div>`;
     }).join("")}</div>`;
 }
@@ -431,3 +436,57 @@ function bindSharedPage() {
         }
     });
 }
+
+
+// ---------- Підказка при наведенні на смужку ----------
+// Звичайне горизонтальне віконечко біля курсора (картка обрізає все, що виходить за її межі,
+// тому підказка живе окремо, поверх сторінки)
+
+const MARK_TIP_TITLE = {
+    helping: "🤝 В процесі допомоги",
+    done: "✅ Завершено"
+};
+
+function markTipElement() {
+    let tip = document.querySelector("#markTip");
+    if (!tip) {
+        tip = document.createElement("div");
+        tip.id = "markTip";
+        tip.className = "mark-tip";
+        document.body.append(tip);
+    }
+    return tip;
+}
+
+document.addEventListener("mouseover", (event) => {
+
+    const strip = event.target.closest && event.target.closest(".mark-strip");
+    const tip = markTipElement();
+
+    if (!strip) {
+        tip.classList.remove("visible");
+        return;
+    }
+
+    const removeHover = event.target.closest(".mark-remove");
+    tip.style.setProperty("--mark", strip.style.getPropertyValue("--mark"));
+    tip.innerHTML = removeHover
+        ? `<strong>Прибрати мітку</strong>`
+        : `<strong>${MARK_TIP_TITLE[strip.dataset.tipType] || escapeHtml(strip.dataset.tipType)}</strong>
+           <span>by ${escapeHtml(strip.dataset.tipName)}</span>
+           ${strip.dataset.tipWhen ? `<small>${escapeHtml(strip.dataset.tipWhen)}</small>` : ""}`;
+
+    const box = strip.getBoundingClientRect();
+    tip.classList.add("visible");
+    const tipBox = tip.getBoundingClientRect();
+    const top = Math.min(window.innerHeight - tipBox.height - 8, Math.max(8, box.top + box.height / 2 - tipBox.height / 2));
+    let left = box.right + 10;
+    if (left + tipBox.width > window.innerWidth - 8) left = box.left - tipBox.width - 10;
+    tip.style.top = `${top}px`;
+    tip.style.left = `${left}px`;
+});
+
+window.addEventListener("scroll", () => {
+    const tip = document.querySelector("#markTip");
+    if (tip) tip.classList.remove("visible");
+}, true);
