@@ -221,14 +221,20 @@
 
 
                 <!-- Поиск -->
-                <div class="search">
+                <div class="search-row">
 
-                    <span>⌕</span>
+                    <div class="search">
 
-                    <input
-                        type="text"
-                        placeholder="Search tasks..."
-                    >
+                        <span>⌕</span>
+
+                        <input
+                            type="text"
+                            placeholder="Search tasks..."
+                        >
+
+                    </div>
+
+                    <select class="category-filter" id="categoryFilter" title="Filter by category"></select>
 
                 </div>
 
@@ -392,6 +398,22 @@
                         <button type="submit" class="create-button">Update password</button>
                     </form>
 
+
+                    <!-- Категории -->
+                    <div class="profile-card categories-card">
+                        <h3>Categories</h3>
+                        <p class="card-hint">Your own categories and subcategories. They appear when you create or edit a task.</p>
+
+                        <div class="category-list" id="categoryList"></div>
+
+                        <form class="inline-add visible" id="profileCategoryForm">
+                            <input type="text" id="profileCategoryInput" placeholder="New category" maxlength="30">
+                            <button type="submit">Add category</button>
+                        </form>
+
+                        <div class="form-message" id="categoriesMessage"></div>
+                    </div>
+
                 </div>
 
             </section>
@@ -413,11 +435,11 @@
 
                 <div>
 
-                    <h2>
+                    <h2 id="taskModalTitle">
                         Create New Task
                     </h2>
 
-                    <p>
+                    <p id="taskModalSubtitle">
                         Add a new task to your project.
                     </p>
 
@@ -470,35 +492,67 @@
                 </div>
 
 
-                <!-- Категория -->
+                <!-- Категория и подкатегория -->
 
-                <div class="form-group">
+                <div class="form-row">
 
-                    <label for="taskCategory">
-                        Category
+                    <div class="form-group">
+
+                        <label for="taskCategory">
+                            Category
+                        </label>
+
+                        <div class="select-row">
+                            <select id="taskCategory"></select>
+                            <button type="button" class="icon-button" id="addCategoryButton" title="New category">+</button>
+                        </div>
+
+                        <div class="inline-add" id="newCategoryRow">
+                            <input type="text" id="newCategoryInput" placeholder="New category" maxlength="30">
+                            <button type="button" id="saveCategoryButton">Add</button>
+                        </div>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="taskSubcategory">
+                            Subcategory <span class="optional">optional</span>
+                        </label>
+
+                        <div class="select-row">
+                            <select id="taskSubcategory"></select>
+                            <button type="button" class="icon-button" id="addSubcategoryButton" title="New subcategory">+</button>
+                        </div>
+
+                        <div class="inline-add" id="newSubcategoryRow">
+                            <input type="text" id="newSubcategoryInput" placeholder="New subcategory" maxlength="40">
+                            <button type="button" id="saveSubcategoryButton">Add</button>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="form-error" id="categoryError"></div>
+
+
+                <!-- Статус (только при редактировании) -->
+
+                <div class="form-group edit-only">
+
+                    <label for="taskStatus">
+                        Status
                     </label>
 
-                    <select id="taskCategory">
-
-                        <option value="Development">
-                            Development
-                        </option>
-
-                        <option value="Design">
-                            Design
-                        </option>
-
-                        <option value="Study">
-                            Study
-                        </option>
-
-                        <option value="Personal">
-                            Personal
-                        </option>
-
+                    <select id="taskStatus">
+                        <option value="todo">Todo</option>
+                        <option value="progress">In Progress</option>
+                        <option value="done">Done</option>
                     </select>
 
                 </div>
+
 
 
                 <!-- Дедлайн -->
@@ -533,6 +587,7 @@
                     <button
                         type="submit"
                         class="create-button"
+                        id="taskSubmit"
                     >
                         Create Task
                     </button>

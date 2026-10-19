@@ -2022,3 +2022,327 @@ body.is-dragging .calendar-day.drop-over {
     color: #ff6b6b;
     background: #2a1619;
 }
+
+
+/* ========================================
+   КАТЕГОРИИ И ПОДКАТЕГОРИИ
+======================================== */
+
+.pink-tag {
+    background: #3a1a30;
+    color: #ff7ac6;
+}
+
+.teal-tag {
+    background: #12332f;
+    color: #4fd1c0;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.form-row .form-group {
+    min-width: 0;
+}
+
+.select-row {
+    display: flex;
+    gap: 6px;
+}
+
+.select-row select {
+    flex: 1;
+    min-width: 0;
+}
+
+.icon-button {
+    flex-shrink: 0;
+    width: 42px;
+
+    border: 1px solid #292e39;
+    border-radius: 9px;
+    background: #0d0f14;
+    color: #a98cff;
+
+    font-size: 20px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.icon-button:hover {
+    border-color: #7c5cff;
+    background: #211c3b;
+}
+
+.optional {
+    color: #606777;
+    font-weight: 400;
+    font-size: 11px;
+}
+
+.inline-add {
+    display: none;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.inline-add.visible {
+    display: flex;
+}
+
+.inline-add input {
+    flex: 1;
+    min-width: 0;
+
+    background: #0d0f14;
+    border: 1px solid #3b3263;
+    border-radius: 8px;
+    color: white;
+
+    padding: 9px 11px;
+    font-size: 13px;
+    outline: none;
+}
+
+.inline-add input:focus {
+    border-color: #7c5cff;
+}
+
+.inline-add button {
+    flex-shrink: 0;
+
+    padding: 0 14px;
+
+    border: none;
+    border-radius: 8px;
+    background: #7c5cff;
+    color: white;
+
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.inline-add button:hover {
+    background: #6847ed;
+}
+
+.form-error {
+    min-height: 0;
+    margin: -10px 0 14px;
+    color: #ff6b6b;
+    font-size: 12px;
+}
+
+.form-error:empty {
+    display: none;
+}
+
+/* Поле статуса — только в режиме редактирования */
+.edit-only {
+    display: none;
+}
+
+#taskModal.editing .edit-only {
+    display: block;
+}
+
+/* Кнопка редактирования на карточке */
+.more.edit-button:hover {
+    color: #c4b2ff;
+    background: #211c3b;
+}
+
+.task-card .more {
+    margin-left: -6px;
+}
+
+
+/* ---------- Поиск + фильтр по категории ---------- */
+
+.search-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.search-row .search {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.category-filter {
+    max-width: 220px;
+
+    background: #0d0f14;
+    border: 1px solid #252a35;
+    border-radius: 9px;
+    color: #b6bac5;
+
+    padding: 0 12px;
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+}
+
+.category-filter:focus,
+.category-filter.active {
+    border-color: #7c5cff;
+    color: #c4b2ff;
+}
+
+@media (max-width: 650px) {
+
+    .search-row {
+        flex-direction: column;
+    }
+
+    .category-filter {
+        max-width: none;
+        padding: 11px 12px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+/* ---------- Категории в профиле ---------- */
+
+.categories-card {
+    grid-column: 1 / -1;
+}
+
+.card-hint {
+    color: #73798a;
+    font-size: 13px;
+    margin: -12px 0 18px;
+}
+
+.category-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.category-item {
+    padding: 14px;
+
+    border: 1px solid #222631;
+    border-radius: 10px;
+    background: #151820;
+}
+
+.category-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.category-head .tag {
+    font-size: 12px;
+}
+
+.category-head small {
+    color: #606777;
+    font-size: 11px;
+}
+
+.chip-remove {
+    margin-left: auto;
+
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #606777;
+
+    padding: 2px 7px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.chip-remove:hover {
+    color: #ff6b6b;
+    background: #2a1619;
+}
+
+.chip-remove.confirm {
+    color: white;
+    background: #e5484d;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.sub-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.sub-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+
+    padding: 4px 4px 4px 9px;
+
+    border: 1px solid #292e39;
+    border-radius: 20px;
+    color: #b6bac5;
+    font-size: 12px;
+}
+
+.sub-chip button {
+    width: 18px;
+    height: 18px;
+
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #606777;
+
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.sub-chip button:hover {
+    color: #ff6b6b;
+    background: #2a1619;
+}
+
+.sub-add input {
+    width: 120px;
+
+    border: 1px dashed #3a4050;
+    border-radius: 20px;
+    background: transparent;
+    color: white;
+
+    padding: 4px 10px;
+    font-size: 12px;
+    outline: none;
+}
+
+.sub-add input:focus {
+    border-color: #7c5cff;
+    border-style: solid;
+}
+
+#profileCategoryForm {
+    max-width: 420px;
+}
+
+/* Окно задачи не вылезает за экран */
+.modal {
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+}

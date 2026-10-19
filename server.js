@@ -645,6 +645,99 @@ app.post("/api/profile/password", auth, (req, res) => {
 });
 
 
+// ==============================
+// КАТЕГОРИИ (у каждого пользователя свои)
+// ==============================
+
+const DEFAULT_CATEGORIES = [
+    { name: "Development", subs: [] },
+    { name: "Design", subs: [] },
+    { name: "Study", subs: ["Aviation Security Labs", "English"] },
+    { name: "Personal", subs: [] }
+];
+
+function getCategories(user) {
+    return Array.isArray(user.categories) ? user.categories : DEFAULT_CATEGORIES;
+}
+
+// Проверяем и чистим список категорий, который прислал браузер
+function cleanCategories(input) {
+
+    if (!Array.isArray(input) || input.length > 50) {
+        throw new Error("Слишком много категорий (максимум 50)");
+    }
+
+    const seen = new Set();
+
+    return input.map(item => {
+
+        const name = String(item && item.name || "").trim();
+
+        if (!name || name.length > 30) {
+            throw new Error("Название категории — от 1 до 30 символов");
+        }
+
+        if (seen.has(name.toLowerCase())) {
+            throw new Error(`Категория «${name}» уже есть`);
+        }
+        seen.add(name.toLowerCase());
+
+        const subsSeen = new Set();
+        const subs = (Array.isArray(item.subs) ? item.subs : []).map(sub => {
+
+            const subName = String(sub || "").trim();
+
+            if (!subName || subName.length > 40) {
+                throw new Error("Название подкатегории — от 1 до 40 символов");
+            }
+
+            if (subsSeen.has(subName.toLowerCase())) {
+                throw new Error(`Подкатегория «${subName}» уже есть`);
+            }
+            subsSeen.add(subName.toLowerCase());
+
+            return subName;
+        });
+
+        if (subs.length > 30) {
+            throw new Error("Максимум 30 подкатегорий в одной категории");
+        }
+
+        return { name, subs };
+    });
+}
+
+app.get("/api/categories", auth, (req, res) => {
+    res.json(getCategories(req.user));
+});
+
+app.put("/api/categories", auth, (req, res) => {
+
+    try {
+
+        const categories = cleanCategories(req.body.categories);
+
+        const users = readJson(usersFile);
+        const user = users.find(u => u.id === req.user.id);
+
+        user.categories = categories;
+        writeJson(usersFile, users);
+
+        res.json(categories);
+
+    } catch (error) {
+
+        res.status(400).json({ error: error.message });
+
+    }
+});
+
+// Короткая проверка текстовых полей задачи
+function cleanText(value, max) {
+    return String(value || "").trim().slice(0, max);
+}
+
+
 // Все запросы к задачам — только для вошедших
 app.use("/api/tasks", auth);
 
@@ -695,8 +788,9 @@ app.post("/api/tasks", (req, res) => {
             id: Date.now(),
             userId: req.user.id,
             title: title,
-            description: req.body.description || "",
-            category: req.body.category || "Development",
+            description: cleanText(req.body.description, 5000),
+            category: cleanText(req.body.category, 30) || "Development",
+            subcategory: cleanText(req.body.subcategory, 40),
             deadline: isValidDate(req.body.deadline) ? req.body.deadline : "",
             status: "todo"
         };
@@ -799,6 +893,30 @@ app.patch("/api/tasks/:id", (req, res) => {
 
             task.status = req.body.status;
 
+        }
+
+        // Меняем текстовые поля (если переданы) — для редактирования задачи
+        if (req.body.title !== undefined) {
+
+            const title = cleanText(req.body.title, 200);
+
+            if (!title) {
+                return res.status(400).json({ error: "Введите название" });
+            }
+
+            task.title = title;
+        }
+
+        if (req.body.description !== undefined) {
+            task.description = cleanText(req.body.description, 5000);
+        }
+
+        if (req.body.category !== undefined) {
+            task.category = cleanText(req.body.category, 30) || "Development";
+        }
+
+        if (req.body.subcategory !== undefined) {
+            task.subcategory = cleanText(req.body.subcategory, 40);
         }
 
         // Меняем дедлайн (если передан). "" = убрать дедлайн

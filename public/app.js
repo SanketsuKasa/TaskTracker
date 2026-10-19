@@ -75,6 +75,13 @@ const taskForm = document.querySelector("#taskForm");
 const taskTitle = document.querySelector("#taskTitle");
 const taskDescription = document.querySelector("#taskDescription");
 const taskCategory = document.querySelector("#taskCategory");
+const taskSubcategory = document.querySelector("#taskSubcategory");
+const taskStatus = document.querySelector("#taskStatus");
+const taskModalTitle = document.querySelector("#taskModalTitle");
+const taskModalSubtitle = document.querySelector("#taskModalSubtitle");
+const taskSubmit = document.querySelector("#taskSubmit");
+const categoryError = document.querySelector("#categoryError");
+const categoryFilter = document.querySelector("#categoryFilter");
 const taskDeadline = document.querySelector("#taskDeadline");
 
 const totalTasks = document.querySelector("#totalTasks");
@@ -102,6 +109,9 @@ let currentView = "dashboard";  // какая кнопка слева выбра
 let currentFilter = "all";      // какой фильтр сверху выбран
 let searchQuery = "";           // текст поиска
 let selectedDate = null;        // выбранный день в календаре "YYYY-MM-DD"
+let categories = [];            // свои категории пользователя
+let categoryFilterValue = "";   // "" = все, "Study" или "Study›English"
+let editingTask = null;         // задача, которую сейчас редактируем
 
 // Какой месяц показывает календарь (всегда 1-е число)
 const now = new Date();
@@ -153,6 +163,35 @@ const categoryColors = {
     Study: "green-tag",
     Personal: "orange-tag"
 };
+
+// Цвета для новых (своих) категорий
+const extraTagColors = ["pink-tag", "teal-tag", "blue-tag", "orange-tag", "green-tag", "purple-tag"];
+
+function categoryTagClass(name) {
+
+    if (categoryColors[name]) {
+        return categoryColors[name];
+    }
+
+    // Один и тот же цвет для одного и того же названия
+    let hash = 0;
+    for (const char of String(name)) {
+        hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+    }
+
+    return extraTagColors[hash % extraTagColors.length];
+}
+
+// "Study › English" или просто "Study"
+function categoryLabel(task) {
+    const category = task.category || "Development";
+    return task.subcategory ? `${category} › ${task.subcategory}` : category;
+}
+
+function categoryTagHtml(task) {
+    const category = task.category || "Development";
+    return `<span class="tag ${categoryTagClass(category)}">${escapeHtml(categoryLabel(task))}</span>`;
+}
 
 
 // ========================================
@@ -244,6 +283,7 @@ function render() {
     renderCalendar();
     renderUpcoming();
     renderProfileStats();
+    renderCategoryManager();
 }
 
 
@@ -320,9 +360,10 @@ function getVisibleTasks() {
     return tasks
         .filter(task => currentFilter === "all" || task.status === currentFilter)
         .filter(task => !selectedDate || task.deadline === selectedDate)
+        .filter(task => matchesCategoryFilter(task))
         .filter(task => {
             if (!searchQuery) return true;
-            const text = `${task.title} ${task.description || ""}`.toLowerCase();
+            const text = `${task.title} ${task.description || ""} ${categoryLabel(task)}`.toLowerCase();
             return text.includes(searchQuery);
         })
         // Новые задачи сверху
@@ -395,9 +436,6 @@ function createTaskCard(task) {
         card.classList.add("overdue-task");
     }
 
-    const category = task.category || "Development";
-    const tagClass = categoryColors[category] || "purple-tag";
-
     card.innerHTML = `
 
         <div class="task-check ${isDone ? "checked" : ""}" title="Change status">
@@ -412,9 +450,7 @@ function createTaskCard(task) {
 
             <div class="task-meta">
 
-                <span class="tag ${tagClass}">
-                    ${escapeHtml(category)}
-                </span>
+                ${categoryTagHtml(task)}
 
                 ${deadlineLabel(task)}
 
@@ -426,7 +462,14 @@ function createTaskCard(task) {
             ${statusNames[task.status] || "Todo"}
         </div>
 
-        <button class="more" title="Delete task" aria-label="Delete task">
+        <button class="more edit-button" title="Edit task" aria-label="Edit task">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9"/>
+                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+            </svg>
+        </button>
+
+        <button class="more delete-button" title="Delete task" aria-label="Delete task">
             <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/>
             </svg>
@@ -438,8 +481,15 @@ function createTaskCard(task) {
     card.querySelector(".task-check")
         .addEventListener("click", () => cycleStatus(task));
 
+    // Редактирование: кнопка-карандаш или двойной клик по названию
+    card.querySelector(".edit-button")
+        .addEventListener("click", () => openEditModal(task));
+
+    card.querySelector("h3")
+        .addEventListener("dblclick", () => openEditModal(task));
+
     // Удаление
-    card.querySelector(".more")
+    card.querySelector(".delete-button")
         .addEventListener("click", () => deleteTask(task, card));
 
     return card;
@@ -507,11 +557,8 @@ function askDelete(task) {
 
     deleteTaskTitle.textContent = task.title;
 
-    const category = task.category || "Development";
-    const tagClass = categoryColors[category] || "purple-tag";
-
     deleteTaskMeta.innerHTML = `
-        <span class="tag ${tagClass}">${escapeHtml(category)}</span>
+        ${categoryTagHtml(task)}
         <span class="task-status ${task.status}">${statusNames[task.status] || "Todo"}</span>
         ${deleteLabelForModal(task)}
     `;
@@ -802,22 +849,390 @@ clearDate.addEventListener("click", () => {
 
 
 // ========================================
-// МОДАЛЬНОЕ ОКНО
+// КАТЕГОРИИ И ПОДКАТЕГОРИИ
 // ========================================
 
+const SUB_SEPARATOR = "›";
+
+async function loadCategories() {
+
+    try {
+        const response = await api("/api/categories");
+        categories = await response.json();
+    } catch (error) {
+        console.error(error);
+    }
+
+    renderCategoryFilter();
+    renderCategoryManager();
+}
+
+// Сохранить весь список на сервере. Возвращает true, если получилось
+async function saveCategories(newList) {
+
+    const response = await api("/api/categories", {
+        method: "PUT",
+        body: JSON.stringify({ categories: newList })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.error || "Error");
+    }
+
+    categories = data;
+
+    renderCategoryFilter();
+    renderCategoryManager();
+
+    return true;
+}
+
+function findCategory(name) {
+    return categories.find(c => c.name === name);
+}
+
+function option(value, text, selected) {
+    const el = document.createElement("option");
+    el.value = value;
+    el.textContent = text;
+    el.selected = Boolean(selected);
+    return el;
+}
+
+// Заполнить выпадающий список категорий в окне задачи
+function fillCategorySelect(selectedCategory, selectedSub) {
+
+    taskCategory.innerHTML = "";
+
+    const names = categories.map(c => c.name);
+
+    // Если у задачи категория, которой уже нет в списке, — всё равно показываем её
+    if (selectedCategory && !names.includes(selectedCategory)) {
+        taskCategory.append(option(selectedCategory, selectedCategory, true));
+    }
+
+    categories.forEach(c => {
+        taskCategory.append(option(c.name, c.name, c.name === selectedCategory));
+    });
+
+    fillSubcategorySelect(selectedSub);
+}
+
+function fillSubcategorySelect(selectedSub) {
+
+    const category = findCategory(taskCategory.value);
+    const subs = category ? category.subs : [];
+
+    taskSubcategory.innerHTML = "";
+    taskSubcategory.append(option("", "— none —", !selectedSub));
+
+    if (selectedSub && !subs.includes(selectedSub)) {
+        taskSubcategory.append(option(selectedSub, selectedSub, true));
+    }
+
+    subs.forEach(sub => {
+        taskSubcategory.append(option(sub, sub, sub === selectedSub));
+    });
+}
+
+taskCategory.addEventListener("change", () => fillSubcategorySelect(""));
+
+
+// ---------- Быстрое добавление прямо в окне задачи ----------
+
+function setupInlineAdd(buttonId, rowId, inputId, saveId, onSave) {
+
+    const button = document.querySelector(buttonId);
+    const row = document.querySelector(rowId);
+    const input = document.querySelector(inputId);
+    const save = document.querySelector(saveId);
+
+    button.addEventListener("click", () => {
+        row.classList.toggle("visible");
+        categoryError.textContent = "";
+        if (row.classList.contains("visible")) input.focus();
+    });
+
+    async function submit() {
+
+        const value = input.value.trim();
+
+        if (!value) {
+            input.focus();
+            return;
+        }
+
+        try {
+            await onSave(value);
+            input.value = "";
+            row.classList.remove("visible");
+            categoryError.textContent = "";
+        } catch (error) {
+            categoryError.textContent = error.message;
+        }
+    }
+
+    save.addEventListener("click", submit);
+
+    // Enter в поле — добавить, а не отправить всю форму
+    input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            submit();
+        }
+        if (event.key === "Escape") {
+            event.stopPropagation();
+            row.classList.remove("visible");
+        }
+    });
+}
+
+setupInlineAdd("#addCategoryButton", "#newCategoryRow", "#newCategoryInput", "#saveCategoryButton", async (name) => {
+
+    await saveCategories([...categories, { name, subs: [] }]);
+
+    fillCategorySelect(name, "");
+    showToast(`Category «${name}» added`);
+});
+
+setupInlineAdd("#addSubcategoryButton", "#newSubcategoryRow", "#newSubcategoryInput", "#saveSubcategoryButton", async (sub) => {
+
+    const categoryName = taskCategory.value;
+
+    const newList = categories.map(c =>
+        c.name === categoryName ? { ...c, subs: [...c.subs, sub] } : c
+    );
+
+    // Категории нет в списке (старая задача) — добавляем её вместе с подкатегорией
+    if (!findCategory(categoryName)) {
+        newList.push({ name: categoryName, subs: [sub] });
+    }
+
+    await saveCategories(newList);
+
+    fillCategorySelect(categoryName, sub);
+    showToast(`Subcategory «${sub}» added to ${categoryName}`);
+});
+
+
+// ---------- Фильтр по категории (рядом с поиском) ----------
+
+function renderCategoryFilter() {
+
+    const current = categoryFilterValue;
+
+    categoryFilter.innerHTML = "";
+    categoryFilter.append(option("", "All categories", !current));
+
+    categories.forEach(c => {
+
+        categoryFilter.append(option(c.name, c.name, current === c.name));
+
+        c.subs.forEach(sub => {
+            const value = `${c.name}${SUB_SEPARATOR}${sub}`;
+            categoryFilter.append(option(value, `\u00A0\u00A0\u00A0› ${sub}`, current === value));
+        });
+    });
+
+    // Выбранная категория пропала — сбрасываем фильтр
+    if (categoryFilter.value !== current) {
+        categoryFilterValue = "";
+    }
+
+    categoryFilter.classList.toggle("active", Boolean(categoryFilterValue));
+}
+
+function matchesCategoryFilter(task) {
+
+    if (!categoryFilterValue) return true;
+
+    const [name, sub] = categoryFilterValue.split(SUB_SEPARATOR);
+
+    if ((task.category || "Development") !== name) return false;
+
+    return sub === undefined || task.subcategory === sub;
+}
+
+categoryFilter.addEventListener("change", () => {
+    categoryFilterValue = categoryFilter.value;
+    categoryFilter.classList.toggle("active", Boolean(categoryFilterValue));
+    renderTasks();
+});
+
+
+// ---------- Управление категориями в профиле ----------
+
+const categoryList = document.querySelector("#categoryList");
+const profileCategoryForm = document.querySelector("#profileCategoryForm");
+const profileCategoryInput = document.querySelector("#profileCategoryInput");
+const categoriesMessage = document.querySelector("#categoriesMessage");
+
+function renderCategoryManager() {
+
+    categoryList.innerHTML = "";
+
+    categories.forEach(category => {
+
+        const used = tasks.filter(t => (t.category || "Development") === category.name).length;
+
+        const item = document.createElement("div");
+        item.className = "category-item";
+
+        item.innerHTML = `
+            <div class="category-head">
+                <span class="tag ${categoryTagClass(category.name)}">${escapeHtml(category.name)}</span>
+                <small>${used} task${used === 1 ? "" : "s"}</small>
+                <button type="button" class="chip-remove" title="Delete category">×</button>
+            </div>
+            <div class="sub-chips">
+                ${category.subs.map((sub, i) => `
+                    <span class="sub-chip">${escapeHtml(sub)}<button type="button" data-sub="${i}" title="Delete subcategory">×</button></span>
+                `).join("")}
+                <form class="sub-add">
+                    <input type="text" placeholder="+ subcategory" maxlength="40">
+                </form>
+            </div>
+        `;
+
+        // Удалить категорию: первый клик — спросить, второй — удалить
+        const removeButton = item.querySelector(".category-head .chip-remove");
+
+        removeButton.addEventListener("click", async () => {
+
+            if (!removeButton.classList.contains("confirm")) {
+                removeButton.classList.add("confirm");
+                removeButton.textContent = "Delete?";
+                setTimeout(() => {
+                    removeButton.classList.remove("confirm");
+                    removeButton.textContent = "×";
+                }, 3000);
+                return;
+            }
+
+            await updateCategories(categories.filter(c => c !== category),
+                `Category «${category.name}» deleted. Its tasks keep the label.`);
+        });
+
+        // Удалить подкатегорию
+        item.querySelectorAll("[data-sub]").forEach(button => {
+            button.addEventListener("click", () => {
+                const index = Number(button.dataset.sub);
+                updateCategories(
+                    categories.map(c => c === category
+                        ? { ...c, subs: c.subs.filter((_, i) => i !== index) }
+                        : c),
+                    "Subcategory deleted"
+                );
+            });
+        });
+
+        // Добавить подкатегорию
+        const subForm = item.querySelector(".sub-add");
+
+        subForm.addEventListener("submit", (event) => {
+
+            event.preventDefault();
+
+            const value = subForm.querySelector("input").value.trim();
+            if (!value) return;
+
+            updateCategories(
+                categories.map(c => c === category ? { ...c, subs: [...c.subs, value] } : c),
+                `Subcategory «${value}» added`
+            );
+        });
+
+        categoryList.append(item);
+    });
+}
+
+async function updateCategories(newList, successText) {
+
+    try {
+        await saveCategories(newList);
+        showFormMessage(categoriesMessage, `✓ ${successText}`);
+        renderTasks();
+    } catch (error) {
+        showFormMessage(categoriesMessage, error.message, true);
+    }
+}
+
+profileCategoryForm.addEventListener("submit", async (event) => {
+
+    event.preventDefault();
+
+    const name = profileCategoryInput.value.trim();
+    if (!name) return;
+
+    await updateCategories([...categories, { name, subs: [] }], `Category «${name}» added`);
+
+    if (!categoriesMessage.classList.contains("error")) {
+        profileCategoryInput.value = "";
+    }
+});
+
+
+// ========================================
+// МОДАЛЬНОЕ ОКНО (создание и редактирование)
+// ========================================
+
+function resetInlineAdds() {
+    document.querySelectorAll("#taskForm .inline-add").forEach(row => row.classList.remove("visible"));
+    categoryError.textContent = "";
+}
+
+// Новая задача
 function openTaskModal(deadline = selectedDate) {
 
-    taskModal.classList.add("active");
+    editingTask = null;
+    taskForm.reset();
+    resetInlineAdds();
+
+    taskModal.classList.remove("editing");
+    taskModalTitle.textContent = "Create New Task";
+    taskModalSubtitle.textContent = "Add a new task to your project.";
+    taskSubmit.textContent = "Create Task";
+
+    // Если выбран фильтр категории — сразу подставляем её
+    const [filterCat, filterSub] = categoryFilterValue ? categoryFilterValue.split(SUB_SEPARATOR) : [];
+    fillCategorySelect(filterCat || (categories[0] && categories[0].name) || "Development", filterSub || "");
 
     // Если выбран день в календаре — подставляем его как дедлайн
     taskDeadline.value = deadline || "";
 
+    taskModal.classList.add("active");
     taskTitle.focus();
+}
+
+// Редактирование существующей задачи
+function openEditModal(task) {
+
+    editingTask = task;
+    resetInlineAdds();
+
+    taskModal.classList.add("editing");
+    taskModalTitle.textContent = "Edit Task";
+    taskModalSubtitle.textContent = "Change anything and save.";
+    taskSubmit.textContent = "Save Changes";
+
+    taskTitle.value = task.title;
+    taskDescription.value = task.description || "";
+    fillCategorySelect(task.category || "Development", task.subcategory || "");
+    taskDeadline.value = task.deadline || "";
+    taskStatus.value = task.status || "todo";
+
+    taskModal.classList.add("active");
+
+    taskTitle.focus();
+    taskTitle.setSelectionRange(taskTitle.value.length, taskTitle.value.length);
 }
 
 function closeTaskModal() {
     taskModal.classList.remove("active");
     taskForm.reset();
+    editingTask = null;
 }
 
 addButton.addEventListener("click", () => openTaskModal());
@@ -839,7 +1254,7 @@ document.addEventListener("keydown", (event) => {
 
 
 // ========================================
-// СОЗДАНИЕ ЗАДАЧИ
+// СОХРАНЕНИЕ ЗАДАЧИ (новой или изменённой)
 // ========================================
 
 taskForm.addEventListener("submit", async (event) => {
@@ -852,40 +1267,83 @@ taskForm.addEventListener("submit", async (event) => {
         return;
     }
 
+    const fields = {
+        title: title,
+        description: taskDescription.value.trim(),
+        category: taskCategory.value,
+        subcategory: taskSubcategory.value,
+        deadline: taskDeadline.value
+    };
+
+    taskSubmit.disabled = true;
+
     try {
 
-        const response = await api("/api/tasks", {
-            method: "POST",
-            body: JSON.stringify({
-                title: title,
-                description: taskDescription.value.trim(),
-                category: taskCategory.value,
-                deadline: taskDeadline.value
-            })
-        });
+        if (editingTask) {
 
-        if (!response.ok) {
-            throw new Error("Ошибка создания задачи");
+            // ---------- Редактирование ----------
+
+            const task = editingTask;
+            const wasDone = task.status === "done";
+
+            const response = await api(`/api/tasks/${task.id}`, {
+                method: "PATCH",
+                body: JSON.stringify({ ...fields, status: taskStatus.value })
+            });
+
+            const updated = await response.json();
+
+            if (!response.ok) {
+                throw new Error(updated.error || "Ошибка сохранения");
+            }
+
+            Object.assign(task, updated);
+
+            closeTaskModal();
+            render();
+
+            if (!wasDone && task.status === "done") {
+                celebrate(task);
+            } else {
+                showToast("✏️ Task updated");
+            }
+
+        } else {
+
+            // ---------- Создание ----------
+
+            const response = await api("/api/tasks", {
+                method: "POST",
+                body: JSON.stringify(fields)
+            });
+
+            if (!response.ok) {
+                throw new Error("Ошибка создания задачи");
+            }
+
+            const task = await response.json();
+
+            tasks.push(task);
+
+            closeTaskModal();
+
+            // Чтобы новая задача точно была видна
+            if (currentFilter !== "all" && currentFilter !== task.status) {
+                setFilter("all", false);
+            }
+
+            render();
         }
-
-        const task = await response.json();
-
-        tasks.push(task);
-
-        closeTaskModal();
-
-        // Чтобы новая задача точно была видна
-        if (currentFilter !== "all" && currentFilter !== task.status) {
-            setFilter("all", false);
-        }
-
-        render();
 
     } catch (error) {
 
         console.error("Ошибка:", error);
 
-        alert("Не удалось создать задачу");
+        showToast(editingTask ? "Не удалось сохранить изменения" : "Не удалось создать задачу");
+
+    } finally {
+
+        taskSubmit.disabled = false;
 
     }
 
@@ -1454,7 +1912,7 @@ exportIcs.addEventListener("click", () => {
             `SUMMARY:${icsText(mark + task.title)}`,
             `DESCRIPTION:${icsText([
                 task.description,
-                `Category: ${task.category || "Development"}`,
+                `Category: ${categoryLabel(task)}`,
                 `Status: ${statusNames[task.status] || "Todo"}`
             ].filter(Boolean).join("\n"))}`,
             `CATEGORIES:${icsText(task.category || "Development")}`,
@@ -1492,5 +1950,6 @@ function escapeHtml(text) {
 
 if (token) {
     loadUser();
+    loadCategories();
     loadTasks();
 }
