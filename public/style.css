@@ -403,7 +403,12 @@ nav {
 .task-info p {
     color: #73798a;
     font-size: 13px;
+    line-height: 1.5;
     margin-bottom: 10px;
+
+    /* Абзаци й переходи на новий рядок з опису */
+    white-space: pre-line;
+    overflow-wrap: anywhere;
 }
 
 .task-meta {
