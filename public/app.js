@@ -854,6 +854,14 @@ clearDate.addEventListener("click", () => {
 
 const SUB_SEPARATOR = "›";
 
+// Базовые категории (есть у всех, удалить нельзя)
+const BASE_CATEGORIES = [
+    { name: "Development", subs: [], base: true },
+    { name: "Design", subs: [], base: true },
+    { name: "Study", subs: ["Aviation Security Labs", "English"], base: true },
+    { name: "Personal", subs: [], base: true }
+];
+
 async function loadCategories() {
 
     try {
@@ -861,6 +869,11 @@ async function loadCategories() {
         categories = await response.json();
     } catch (error) {
         console.error(error);
+    }
+
+    // Что бы ни случилось — базовые категории в списке есть всегда
+    if (!Array.isArray(categories) || !categories.length) {
+        categories = BASE_CATEGORIES.map(c => ({ ...c, subs: [...c.subs] }));
     }
 
     renderCategoryFilter();
@@ -1082,13 +1095,16 @@ function renderCategoryManager() {
 
         item.innerHTML = `
             <div class="category-head">
-                <span class="tag ${categoryTagClass(category.name)}">${escapeHtml(category.name)}</span>
+                <span class="tag ${categoryTagClass(category.name)} category-name">${escapeHtml(category.name)}</span>
                 <small>${used} task${used === 1 ? "" : "s"}</small>
-                <button type="button" class="chip-remove" title="Delete category">×</button>
+                ${category.base
+                    ? `<span class="base-badge" title="Basic category — always stays">base</span>`
+                    : `<button type="button" class="chip-action rename-category" title="Rename category">✎</button>
+                       <button type="button" class="chip-remove" title="Delete category">×</button>`}
             </div>
             <div class="sub-chips">
                 ${category.subs.map((sub, i) => `
-                    <span class="sub-chip">${escapeHtml(sub)}<button type="button" data-sub="${i}" title="Delete subcategory">×</button></span>
+                    <span class="sub-chip"><span class="sub-name" data-sub="${i}" title="Click to rename">${escapeHtml(sub)}</span><button type="button" data-remove="${i}" title="Delete subcategory">×</button></span>
                 `).join("")}
                 <form class="sub-add">
                     <input type="text" placeholder="+ subcategory" maxlength="40">
@@ -1096,29 +1112,48 @@ function renderCategoryManager() {
             </div>
         `;
 
-        // Удалить категорию: первый клик — спросить, второй — удалить
-        const removeButton = item.querySelector(".category-head .chip-remove");
+        // ---------- Своя категория: переименовать / удалить ----------
 
-        removeButton.addEventListener("click", async () => {
+        if (!category.base) {
 
-            if (!removeButton.classList.contains("confirm")) {
-                removeButton.classList.add("confirm");
-                removeButton.textContent = "Delete?";
-                setTimeout(() => {
-                    removeButton.classList.remove("confirm");
-                    removeButton.textContent = "×";
-                }, 3000);
-                return;
-            }
+            item.querySelector(".rename-category").addEventListener("click", () => {
+                startInlineRename(item.querySelector(".category-name"), category.name, 30,
+                    (newName) => renameCategory({ category: category.name, newName }));
+            });
 
-            await updateCategories(categories.filter(c => c !== category),
-                `Category «${category.name}» deleted. Its tasks keep the label.`);
+            // Первый клик — спросить, второй — удалить
+            const removeButton = item.querySelector(".chip-remove");
+
+            removeButton.addEventListener("click", async () => {
+
+                if (!removeButton.classList.contains("confirm")) {
+                    removeButton.classList.add("confirm");
+                    removeButton.textContent = "Delete?";
+                    setTimeout(() => {
+                        removeButton.classList.remove("confirm");
+                        removeButton.textContent = "×";
+                    }, 3000);
+                    return;
+                }
+
+                await updateCategories(categories.filter(c => c !== category),
+                    `Category «${category.name}» deleted. Its tasks keep the label.`);
+            });
+        }
+
+        // ---------- Подкатегории: переименовать (клик) / удалить ----------
+
+        item.querySelectorAll(".sub-name").forEach(el => {
+            el.addEventListener("click", () => {
+                const sub = category.subs[Number(el.dataset.sub)];
+                startInlineRename(el, sub, 40,
+                    (newName) => renameCategory({ category: category.name, sub, newName }));
+            });
         });
 
-        // Удалить подкатегорию
-        item.querySelectorAll("[data-sub]").forEach(button => {
+        item.querySelectorAll("[data-remove]").forEach(button => {
             button.addEventListener("click", () => {
-                const index = Number(button.dataset.sub);
+                const index = Number(button.dataset.remove);
                 updateCategories(
                     categories.map(c => c === category
                         ? { ...c, subs: c.subs.filter((_, i) => i !== index) }
@@ -1146,6 +1181,82 @@ function renderCategoryManager() {
 
         categoryList.append(item);
     });
+}
+
+// Превращает название в поле ввода. Enter — сохранить, Esc — отмена
+function startInlineRename(element, currentName, maxLength, onSave) {
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "rename-input";
+    input.value = currentName;
+    input.maxLength = maxLength;
+
+    element.replaceWith(input);
+    input.focus();
+    input.select();
+
+    let done = false;
+
+    async function finish(save) {
+
+        if (done) return;
+        done = true;
+
+        const value = input.value.trim();
+
+        if (save && value && value !== currentName) {
+            await onSave(value);
+        } else {
+            renderCategoryManager();
+        }
+    }
+
+    input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            finish(true);
+        }
+        if (event.key === "Escape") {
+            finish(false);
+        }
+    });
+
+    input.addEventListener("blur", () => finish(true));
+}
+
+async function renameCategory(body) {
+
+    try {
+
+        const response = await api("/api/categories/rename", {
+            method: "POST",
+            body: JSON.stringify(body)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Error");
+        }
+
+        categories = data.categories;
+        tasks = data.tasks;
+
+        // Фильтр указывал на старое название — сбрасываем
+        categoryFilterValue = "";
+
+        renderCategoryFilter();
+        render();
+
+        showFormMessage(categoriesMessage, `✓ Renamed to «${body.newName}»`);
+
+    } catch (error) {
+
+        showFormMessage(categoriesMessage, error.message, true);
+        renderCategoryManager();
+
+    }
 }
 
 async function updateCategories(newList, successText) {

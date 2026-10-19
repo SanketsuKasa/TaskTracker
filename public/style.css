@@ -2346,3 +2346,63 @@ body.is-dragging .calendar-day.drop-over {
     max-height: calc(100vh - 40px);
     overflow-y: auto;
 }
+
+
+/* Базовые категории и переименование */
+
+.base-badge {
+    margin-left: auto;
+
+    padding: 2px 7px;
+    border-radius: 5px;
+    background: #1c202a;
+    color: #606777;
+
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.chip-action {
+    margin-left: auto;
+
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #606777;
+
+    padding: 2px 7px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.chip-action:hover {
+    color: #c4b2ff;
+    background: #211c3b;
+}
+
+.chip-action + .chip-remove {
+    margin-left: 0;
+}
+
+.sub-name {
+    cursor: text;
+}
+
+.sub-name:hover {
+    color: white;
+    text-decoration: underline dotted;
+}
+
+.rename-input {
+    width: 150px;
+
+    border: 1px solid #7c5cff;
+    border-radius: 6px;
+    background: #0d0f14;
+    color: white;
+
+    padding: 3px 8px;
+    font-size: 12px;
+    outline: none;
+}

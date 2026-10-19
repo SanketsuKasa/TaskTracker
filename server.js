@@ -656,8 +656,33 @@ const DEFAULT_CATEGORIES = [
     { name: "Personal", subs: [] }
 ];
 
+// Базовые категории есть у всех и не удаляются
+const BASE_CATEGORY_NAMES = DEFAULT_CATEGORIES.map(c => c.name);
+
+function isBaseCategory(name) {
+    return BASE_CATEGORY_NAMES.includes(name);
+}
+
+// Базовые категории всегда в начале списка (с подкатегориями пользователя),
+// за ними — свои категории пользователя
+function withBaseCategories(list) {
+
+    const saved = Array.isArray(list) ? list : DEFAULT_CATEGORIES;
+
+    const base = DEFAULT_CATEGORIES.map(def => {
+        const own = saved.find(c => c.name === def.name);
+        return { name: def.name, subs: own ? own.subs : def.subs, base: true };
+    });
+
+    const custom = saved
+        .filter(c => !isBaseCategory(c.name))
+        .map(c => ({ name: c.name, subs: c.subs, base: false }));
+
+    return [...base, ...custom];
+}
+
 function getCategories(user) {
-    return Array.isArray(user.categories) ? user.categories : DEFAULT_CATEGORIES;
+    return withBaseCategories(user.categories);
 }
 
 // Проверяем и чистим список категорий, который прислал браузер
@@ -715,7 +740,9 @@ app.put("/api/categories", auth, (req, res) => {
 
     try {
 
-        const categories = cleanCategories(req.body.categories);
+        // Базовые категории вернутся, даже если их убрали из списка
+        const categories = withBaseCategories(cleanCategories(req.body.categories))
+            .map(({ name, subs }) => ({ name, subs }));
 
         const users = readJson(usersFile);
         const user = users.find(u => u.id === req.user.id);
@@ -723,7 +750,70 @@ app.put("/api/categories", auth, (req, res) => {
         user.categories = categories;
         writeJson(usersFile, users);
 
-        res.json(categories);
+        res.json(getCategories(user));
+
+    } catch (error) {
+
+        res.status(400).json({ error: error.message });
+
+    }
+});
+
+// Переименовать категорию или подкатегорию (вместе с задачами)
+// { category, newName }            — категорию
+// { category, sub, newName }       — подкатегорию
+app.post("/api/categories/rename", auth, (req, res) => {
+
+    try {
+
+        const categoryName = String(req.body.category || "").trim();
+        const subName = req.body.sub !== undefined ? String(req.body.sub).trim() : null;
+        const newName = String(req.body.newName || "").trim();
+
+        const users = readJson(usersFile);
+        const user = users.find(u => u.id === req.user.id);
+
+        const list = getCategories(user).map(({ name, subs }) => ({ name, subs: [...subs] }));
+        const category = list.find(c => c.name === categoryName);
+
+        if (!category) {
+            return res.status(404).json({ error: "Категория не найдена" });
+        }
+
+        const tasks = readJson(tasksFile);
+        const ownTasks = tasks.filter(t => t.userId === user.id && (t.category || "Development") === categoryName);
+
+        if (subName === null) {
+
+            if (isBaseCategory(categoryName)) {
+                return res.status(400).json({ error: "Базовые категории нельзя переименовать" });
+            }
+
+            category.name = newName;
+            ownTasks.forEach(t => { t.category = newName; });
+
+        } else {
+
+            const index = category.subs.indexOf(subName);
+
+            if (index === -1) {
+                return res.status(404).json({ error: "Подкатегория не найдена" });
+            }
+
+            category.subs[index] = newName;
+            ownTasks.filter(t => t.subcategory === subName).forEach(t => { t.subcategory = newName; });
+        }
+
+        // Проверяем новый список (пустые и повторяющиеся названия не пройдут)
+        user.categories = cleanCategories(list);
+
+        writeJson(usersFile, users);
+        writeJson(tasksFile, tasks);
+
+        res.json({
+            categories: getCategories(user),
+            tasks: tasks.filter(t => t.userId === user.id)
+        });
 
     } catch (error) {
 
