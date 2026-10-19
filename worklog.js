@@ -400,7 +400,27 @@ function onStatusChange(task, sessions, newStatus) {
     return events;
 }
 
+// Прогноз, который видел пользователь при создании задачи (сохраняется один раз)
+function cleanForecastSnapshot(input) {
+
+    if (!input || typeof input !== "object") return null;
+
+    const minutes = Number(input.minutes);
+
+    if (!Number.isFinite(minutes) || minutes <= 0 || minutes > 100000) return null;
+
+    return {
+        minutes: Math.round(minutes),
+        ratio: Number.isFinite(Number(input.ratio)) ? Number(Number(input.ratio).toFixed(3)) : null,
+        basis: String(input.basis || "").slice(0, 80),
+        samples: Number.isInteger(input.samples) ? input.samples : null,
+        algorithm: String(input.algorithm || "v1").slice(0, 20),
+        createdAt: new Date().toISOString()
+    };
+}
+
 module.exports = {
+    cleanForecastSnapshot,
     readSessions,
     saveSessions: data => writeJson(sessionsFile, data),
     withWork,

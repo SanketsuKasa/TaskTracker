@@ -3123,3 +3123,552 @@ body:not(.productivity-on) .prod-features {
         align-items: flex-start;
     }
 }
+
+
+/* ========================================
+   ПРОГНОЗ ПРОГРАММЫ (в окне задачи)
+======================================== */
+
+.forecast {
+    margin: -4px 0 18px;
+    padding: 14px 16px;
+
+    border: 1px solid #1f5c3c;
+    border-radius: 11px;
+    background: #12261c;
+    color: #b8f0cf;
+}
+
+.forecast.medium { border-color: #1f5c3c; }
+.forecast.low { border-color: #4a3d1c; background: #1e1b13; color: #ecd9a6; }
+.forecast.waiting { border-color: #262b36; background: #151820; color: #858b9b; }
+
+.forecast-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.forecast-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #858b9b;
+    margin-bottom: 4px;
+}
+
+.forecast-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+}
+
+.forecast-value small {
+    font-size: 13px;
+    font-weight: 400;
+    color: #a3a9b6;
+}
+
+.forecast-text {
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.forecast-text strong {
+    color: white;
+}
+
+.forecast-text span {
+    color: #858b9b;
+    font-size: 12px;
+}
+
+.confidence {
+    flex-shrink: 0;
+    padding: 4px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.confidence.high { background: #183528; color: #51d48a; }
+.confidence.medium { background: #172c42; color: #7dbdff; }
+.confidence.low { background: #29251a; color: #e6c26e; }
+
+.app-forecast {
+    color: #a3a9b6;
+}
+
+
+/* ========================================
+   АНАЛИТИКА (Settings → Productivity)
+======================================== */
+
+.analytics {
+    margin-top: 4px;
+}
+
+body.productivity-on .analytics.prod-only {
+    display: flex !important;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.analytics-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.period-switch {
+    min-width: 240px;
+}
+
+.period-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.period-nav span {
+    min-width: 170px;
+    text-align: center;
+    font-weight: 600;
+    color: #e6e8ee;
+}
+
+.period-nav button {
+    height: 34px;
+    min-width: 34px;
+    padding: 0 10px;
+
+    border: 1px solid #292e39;
+    border-radius: 8px;
+    background: #11141b;
+    color: #b6bac5;
+
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.period-nav button:hover:not(:disabled) {
+    color: white;
+    background: #1a1d27;
+}
+
+.period-nav button:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.analytics-tiles {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+}
+
+.analytics-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    padding: 18px;
+
+    border: 1px solid #222631;
+    border-radius: 12px;
+    background: #13161e;
+}
+
+.analytics-tile span {
+    color: #858b9b;
+    font-size: 12px;
+}
+
+.analytics-tile strong {
+    font-size: 26px;
+}
+
+.analytics-tile small {
+    color: #606777;
+    font-size: 11px;
+}
+
+.chart {
+    width: 100%;
+    overflow: hidden;
+}
+
+.chart svg {
+    display: block;
+}
+
+.chart .grid {
+    stroke: #222631;
+    stroke-width: 1;
+}
+
+.chart .baseline {
+    stroke: #3a4050;
+    stroke-width: 1;
+}
+
+.chart .axis {
+    fill: #73798a;
+    font-size: 11px;
+}
+
+.chart .seg-gap {
+    stroke: #11141b;
+    stroke-width: 2;
+}
+
+.chart .hit {
+    fill: transparent;
+    cursor: crosshair;
+}
+
+.chart .hit:hover {
+    fill: rgba(255, 255, 255, 0.04);
+}
+
+.chart-empty {
+    padding: 48px 16px;
+    text-align: center;
+    color: #73798a;
+    font-size: 14px;
+}
+
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    margin-top: 12px;
+    color: #b6bac5;
+    font-size: 13px;
+}
+
+.chart-legend span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.chart-legend i,
+.balance-row i,
+.tt-row i {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.chart-legend b {
+    color: #e6e8ee;
+    font-weight: 600;
+}
+
+.table-toggle {
+    margin-top: 14px;
+}
+
+.table-toggle summary {
+    color: #a98cff;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.data-table {
+    width: 100%;
+    margin-top: 10px;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.data-table th,
+.data-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #222631;
+    text-align: left;
+    color: #b6bac5;
+}
+
+.data-table th {
+    color: #858b9b;
+    font-weight: 600;
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+
+/* ---------- Как вы работаете ---------- */
+
+.style-item {
+    display: flex;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid #1d212b;
+}
+
+.style-item:first-child {
+    padding-top: 0;
+}
+
+.style-icon {
+    flex-shrink: 0;
+
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+    background: #211c3b;
+    font-size: 18px;
+}
+
+.style-title {
+    color: #858b9b;
+    font-size: 12px;
+    margin-bottom: 2px;
+}
+
+.style-value {
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 3px;
+}
+
+.style-text {
+    color: #b6bac5;
+    font-size: 13px;
+}
+
+.style-n {
+    margin-top: 4px;
+    color: #606777;
+    font-size: 11px;
+}
+
+.not-enough .style-value {
+    color: #73798a;
+}
+
+.style-note {
+    margin-top: 14px;
+    color: #606777;
+    font-size: 12px;
+    font-style: italic;
+}
+
+
+/* ---------- Баланс жизни ---------- */
+
+.balance-wrap {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+}
+
+.donut {
+    flex-shrink: 0;
+}
+
+.donut .slice-dim {
+    opacity: 0.28;
+}
+
+.donut .slice-hit {
+    fill: transparent;
+    cursor: crosshair;
+}
+
+.donut-value {
+    fill: white;
+    font-size: 30px;
+    font-weight: 700;
+}
+
+.donut-label {
+    fill: #858b9b;
+    font-size: 12px;
+}
+
+.balance-legend {
+    flex: 1;
+    min-width: 0;
+}
+
+.balance-row {
+    display: grid;
+    grid-template-columns: 10px minmax(60px, 1fr) auto;
+    align-items: center;
+    column-gap: 8px;
+    row-gap: 4px;
+    padding: 7px 0;
+    font-size: 13px;
+}
+
+.balance-name {
+    color: #e6e8ee;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.balance-count {
+    color: #858b9b;
+    font-size: 12px;
+}
+
+.balance-bar {
+    grid-column: 2;
+    height: 5px;
+    border-radius: 3px;
+    background: #222631;
+    overflow: hidden;
+}
+
+.balance-bar span {
+    display: block;
+    height: 100%;
+    border-radius: 3px;
+}
+
+.balance-done {
+    color: #a3a9b6;
+    font-size: 11px;
+}
+
+
+/* ---------- Подсказка ---------- */
+
+.chart-tooltip {
+    position: fixed;
+    z-index: 3000;
+
+    min-width: 150px;
+    padding: 10px 12px;
+
+    border: 1px solid #2e3442;
+    border-radius: 9px;
+    background: #191c25;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+
+    font-size: 12px;
+    color: #b6bac5;
+
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.1s;
+}
+
+.chart-tooltip.visible {
+    opacity: 1;
+}
+
+.tt-title {
+    margin-bottom: 6px;
+    color: white;
+    font-weight: 700;
+}
+
+.tt-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+}
+
+.tt-row b {
+    margin-left: auto;
+    padding-left: 12px;
+    color: #e6e8ee;
+}
+
+.tt-row.muted {
+    color: #73798a;
+}
+
+.tt-total {
+    display: flex;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #2e3442;
+}
+
+.tt-total b {
+    margin-left: auto;
+    color: white;
+}
+
+@media (max-width: 1100px) {
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 760px) {
+
+    .analytics-tiles {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .balance-wrap {
+        flex-direction: column;
+    }
+
+    .period-nav {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .period-nav span {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .period-switch {
+        min-width: 0;
+        width: 100%;
+    }
+}
+
+/* Основная колонка может сжиматься (иначе на телефоне страница шире экрана) */
+.main {
+    min-width: 0;
+}
+
+.filters {
+    flex-wrap: wrap;
+}
+
+@media (max-width: 1150px) {
+    .content-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 650px) {
+    .header {
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    .stats {
+        gap: 10px;
+    }
+}

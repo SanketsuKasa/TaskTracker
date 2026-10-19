@@ -499,6 +499,58 @@
 
                     </div>
 
+
+                    <!-- ======== Графики и аналитика ======== -->
+
+                    <div class="analytics prod-only" id="analytics">
+
+                        <div class="analytics-toolbar">
+
+                            <div class="segmented period-switch" id="periodSwitch">
+                                <button type="button" data-value="day">Day</button>
+                                <button type="button" data-value="week" class="on">Week</button>
+                                <button type="button" data-value="month">Month</button>
+                            </div>
+
+                            <div class="period-nav">
+                                <button type="button" id="periodPrev" title="Previous">‹</button>
+                                <span id="periodLabel"></span>
+                                <button type="button" id="periodNext" title="Next">›</button>
+                                <button type="button" id="periodToday">Today</button>
+                            </div>
+
+                        </div>
+
+                        <div class="analytics-tiles" id="analyticsTiles"></div>
+
+                        <div class="profile-card chart-card">
+                            <h3>Active time by category</h3>
+                            <p class="card-hint" id="activityHint"></p>
+                            <div class="chart" id="activityChart"></div>
+                            <div class="chart-legend" id="activityLegend"></div>
+                            <details class="table-toggle">
+                                <summary>Show as table</summary>
+                                <div id="activityTable"></div>
+                            </details>
+                        </div>
+
+                        <div class="analytics-grid">
+
+                            <div class="profile-card">
+                                <h3>How you work</h3>
+                                <div id="workStyle"></div>
+                            </div>
+
+                            <div class="profile-card">
+                                <h3>Life balance</h3>
+                                <p class="card-hint">Tasks in each area of life in this period</p>
+                                <div id="balanceChart"></div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
                 </div>
 
             </section>
@@ -843,8 +895,13 @@
     </div>
 
 
+    <!-- Подсказка для графиков -->
+    <div class="chart-tooltip" id="chartTooltip" role="tooltip"></div>
+
+
     <!-- JavaScript -->
     <script src="productivity.js"></script>
+    <script src="analytics.js"></script>
     <script src="app.js"></script>
 
 </body>

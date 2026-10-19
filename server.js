@@ -930,6 +930,10 @@ app.post("/api/tasks", (req, res) => {
         // Первоначальный план сохраняем отдельно — он не перезаписывается
         newTask.initialPlan = worklog.initialPlan(newTask);
 
+        // Прогноз программы на момент создания — для честной проверки точности потом
+        const snapshot = worklog.cleanForecastSnapshot(req.body.forecastSnapshot);
+        if (snapshot) newTask.forecastSnapshot = snapshot;
+
         tasks.push(newTask);
 
         writeJson(tasksFile, tasks);
@@ -1150,6 +1154,18 @@ app.post("/api/tasks/:id/work", (req, res) => {
         res.status(500).json({ error: "Не удалось изменить задачу" });
 
     }
+});
+
+// Все рабочие сессии пользователя — для графиков продуктивности
+app.get("/api/productivity/sessions", auth, (req, res) => {
+
+    const sessions = worklog.readSessions()
+        .filter(s => s.userId === req.user.id)
+        .map(({ id, taskId, startedAt, endedAt, durationSeconds, status }) =>
+            ({ id, taskId, startedAt, endedAt, durationSeconds, status }));
+
+    res.set("X-Server-Time", new Date().toISOString());
+    res.json(sessions);
 });
 
 // История задачи: все сессии и события

@@ -291,6 +291,9 @@ function render() {
     renderUpcoming();
     renderProfileStats();
     renderCategoryManager();
+
+    // Графики продуктивности обновляются вместе с задачами (если открыты)
+    if (analyticsVisible()) renderAnalytics();
 }
 
 
@@ -314,6 +317,8 @@ function setView(view) {
     setFilter(views[view].filter, false);
 
     render();
+
+    if (view === "settings") loadAnalytics();
 }
 
 // ---------- Вкладки настроек ----------
@@ -332,6 +337,8 @@ function setSettingsTab(tab) {
 
     // Запоминаем последнюю вкладку (если браузер разрешает)
     try { localStorage.setItem("settingsTab", tab); } catch (error) { }
+
+    loadAnalytics();
 }
 
 function openSettings(tab) {

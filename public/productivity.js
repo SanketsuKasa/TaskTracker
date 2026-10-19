@@ -43,6 +43,9 @@ function applyProductivityMode(on) {
 
     document.querySelector("#deadlineLabel").textContent =
         productivityOn ? "External deadline (optional)" : "Deadline";
+
+    // Если открыта страница с графиками — сразу показываем их
+    if (productivityOn && typeof loadAnalytics === "function") loadAnalytics();
 }
 
 productivityToggle.addEventListener("change", async () => {
@@ -198,6 +201,10 @@ function productivityRowHtml(task) {
         }
 
         parts.push(`<span class="time-info">⏱ ${text}</span>`);
+    }
+
+    if (task.forecastSnapshot) {
+        parts.push(`<span class="app-forecast" title="What the app predicted when the task was created">🤖 ${formatMinutes(task.forecastSnapshot.minutes)}</span>`);
     }
 
     if (task.plannedFinishAt && task.status !== "done") {
@@ -471,7 +478,8 @@ function productivityReadForm() {
         plannedStartAt: plannedStartInput.value,
         energy: getSegment(energySegment) || null,
         load: getSegment(loadSegment) || null,
-        familiarity: familiaritySelect.value
+        familiarity: familiaritySelect.value,
+        forecastSnapshot: currentForecastSnapshot()
     };
 }
 
@@ -501,34 +509,79 @@ function forecastFor(category, difficulty, estimateMinutes) {
 
     const finished = tasks.filter(t =>
         t.status === "done" &&
-        t.estimateMinutes > 0 &&
         (t.work && t.work.totalSeconds >= 60) &&
         (!editingTask || t.id !== editingTask.id)
     );
 
-    const groups = [
-        { label: `${category} tasks of this difficulty`, list: finished.filter(t => t.category === category && difficulty && t.difficulty === difficulty) },
-        { label: `${category} tasks`, list: finished.filter(t => t.category === category) },
-        { label: `tasks of this difficulty`, list: finished.filter(t => difficulty && t.difficulty === difficulty) },
-        { label: "all your tasks", list: finished }
+    // Задачи, где была и оценка, и замеренное время — для коэффициента ошибки
+    const rated = finished.filter(t => t.estimateMinutes > 0);
+
+    const groupsFor = list => [
+        { label: `${category} tasks of this difficulty`, list: list.filter(t => t.category === category && difficulty && t.difficulty === difficulty) },
+        { label: `${category} tasks`, list: list.filter(t => t.category === category) },
+        { label: "tasks of this difficulty", list: list.filter(t => difficulty && t.difficulty === difficulty) },
+        { label: "all your tasks", list }
     ];
 
-    const group = groups.find(g => g.list.length >= FORECAST_MIN_SAMPLES);
-
-    if (!group) {
-        return { ready: false, count: finished.length };
+    // Уверенность: сколько примеров и насколько они разбросаны
+    function confidence(values) {
+        const sorted = [...values].sort((a, b) => a - b);
+        const q = p => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))];
+        const spread = (q(0.75) - q(0.25)) / (median(values) || 1);
+        if (values.length >= 10 && spread <= 0.4) return "high";
+        if (values.length >= 5 && spread <= 0.8) return "medium";
+        return "low";
     }
 
-    const ratio = median(group.list.map(t => t.work.totalSeconds / 60 / t.estimateMinutes));
+    // 1) Есть ваша оценка → корректируем её вашим личным коэффициентом
+    if (estimateMinutes) {
+
+        const group = groupsFor(rated).find(g => g.list.length >= FORECAST_MIN_SAMPLES);
+
+        if (!group) {
+            return { ready: false, count: rated.length };
+        }
+
+        const ratios = group.list.map(t => t.work.totalSeconds / 60 / t.estimateMinutes);
+        const ratio = median(ratios);
+
+        return {
+            ready: true,
+            mode: "ratio",
+            ratio,
+            count: group.list.length,
+            label: group.label,
+            confidence: confidence(ratios),
+            minutes: estimateMinutes * ratio
+        };
+    }
+
+    // 2) Оценки нет → сколько обычно длятся похожие выполненные задачи
+    const group = groupsFor(finished).find(g => g.list.length >= FORECAST_MIN_SAMPLES);
+
+    if (!group) {
+        return { ready: false, count: rated.length };
+    }
+
+    const actual = group.list.map(t => t.work.totalSeconds / 60);
 
     return {
         ready: true,
-        ratio,
+        mode: "similar",
         count: group.list.length,
         label: group.label,
-        minutes: estimateMinutes ? estimateMinutes * ratio : null
+        confidence: confidence(actual),
+        minutes: median(actual)
     };
 }
+
+let lastForecast = null;
+
+const confidenceNames = {
+    low: "Low confidence",
+    medium: "Medium confidence",
+    high: "High confidence"
+};
 
 function updateForecast() {
 
@@ -537,27 +590,51 @@ function updateForecast() {
     const estimate = readEstimateMinutes();
     const result = forecastFor(taskCategory.value, formDifficulty, estimate);
 
+    lastForecast = result.ready ? result : null;
+
     if (!result.ready) {
         forecastBox.className = "forecast waiting";
-        forecastBox.innerHTML = `📈 A personal forecast appears after <strong>${FORECAST_MIN_SAMPLES} finished tasks</strong> with a time estimate and tracked time (you have ${result.count}).`;
+        forecastBox.innerHTML = `
+            <div class="forecast-label">🤖 Predicted by the app</div>
+            <div class="forecast-text">Not enough history yet. The forecast appears after <strong>${FORECAST_MIN_SAMPLES} finished tasks</strong> with your time estimate and tracked time (you have ${result.count}).</div>`;
         return;
     }
 
-    const ratioText = `×${result.ratio.toFixed(2).replace(/\.?0+$/, "")}`;
-    const tendency = result.ratio > 1.1
-        ? `you usually need ${ratioText} of your estimate`
-        : result.ratio < 0.9
-            ? `you usually finish faster: ${ratioText} of your estimate`
-            : "your estimates are usually accurate";
+    let explanation;
 
-    forecastBox.className = "forecast";
-
-    if (!estimate) {
-        forecastBox.innerHTML = `📈 On ${escapeHtml(result.label)} ${tendency}. Enter your estimate to see the forecast.`;
-        return;
+    if (result.mode === "ratio") {
+        const times = `×${result.ratio.toFixed(2).replace(/\.?0+$/, "")}`;
+        explanation = result.ratio > 1.1
+            ? `On ${escapeHtml(result.label)} you usually work <strong>${times}</strong> longer than you plan.`
+            : result.ratio < 0.9
+                ? `On ${escapeHtml(result.label)} you usually finish faster: <strong>${times}</strong> of your plan.`
+                : `On ${escapeHtml(result.label)} your estimates are usually accurate.`;
+    } else {
+        explanation = `Similar ${escapeHtml(result.label)} usually take this long. Add your own estimate for a personal correction.`;
     }
 
+    forecastBox.className = `forecast ${result.confidence}`;
     forecastBox.innerHTML = `
-        📈 Forecast: <strong>~${formatMinutes(result.minutes)}</strong> of active work.
-        <span>On ${escapeHtml(result.label)} ${tendency} (based on ${result.count} tasks).</span>`;
+        <div class="forecast-head">
+            <div>
+                <div class="forecast-label">🤖 Predicted by the app</div>
+                <div class="forecast-value">~${formatMinutes(result.minutes)} <small>of active work</small></div>
+            </div>
+            <span class="confidence ${result.confidence}" title="Based on how many similar tasks you have and how stable they are">${confidenceNames[result.confidence]}</span>
+        </div>
+        <div class="forecast-text">${explanation} <span>Based on ${result.count} finished tasks.</span></div>`;
+}
+
+// Прогноз, который сохраним вместе с новой задачей
+function currentForecastSnapshot() {
+
+    if (!lastForecast || editingTask) return null;
+
+    return {
+        minutes: Math.round(lastForecast.minutes),
+        ratio: lastForecast.ratio || null,
+        basis: `${lastForecast.mode}: ${lastForecast.label}`,
+        samples: lastForecast.count,
+        algorithm: "v1-median"
+    };
 }
