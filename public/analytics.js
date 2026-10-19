@@ -237,6 +237,7 @@ function renderAnalytics() {
 
     renderTiles(data);
     renderActivityChart(data);
+    renderTrendChart(data);
     renderWorkStyle(data);
     renderBalance(data);
 }
@@ -401,6 +402,222 @@ function renderActivityChart(data) {
                 <tr><td>${b.title}</td>${data.usedKeys.map(k => `<td>${b.values[k] ? formatMinutes(b.values[k] / 60) : "—"}</td>`).join("")}<td><b>${formatMinutes(b.total / 60)}</b></td></tr>`).join("")}
             </tbody>
         </table>`;
+}
+
+
+// ========================================
+// ГРАФИК-ЛИНИЯ: тренд активного времени по категориям
+// ========================================
+
+const hiddenTrendSeries = new Set();
+
+// Плавная кривая без «выбросов» ниже нуля (монотонная интерполяция Фрича–Карлсона)
+function smoothPath(points) {
+
+    if (points.length < 2) return "";
+
+    const n = points.length;
+    const dx = [], dy = [], m = [];
+
+    for (let i = 0; i < n - 1; i++) {
+        dx[i] = points[i + 1][0] - points[i][0];
+        dy[i] = points[i + 1][1] - points[i][1];
+        m[i] = dy[i] / dx[i];
+    }
+
+    const t = [m[0]];
+    for (let i = 1; i < n - 1; i++) {
+        t[i] = m[i - 1] * m[i] <= 0 ? 0 : (m[i - 1] + m[i]) / 2;
+    }
+    t[n - 1] = m[n - 2];
+
+    for (let i = 0; i < n - 1; i++) {
+        if (m[i] === 0) {
+            t[i] = 0;
+            t[i + 1] = 0;
+            continue;
+        }
+        const a = t[i] / m[i];
+        const b = t[i + 1] / m[i];
+        const s = a * a + b * b;
+        if (s > 9) {
+            const k = 3 / Math.sqrt(s);
+            t[i] = k * a * m[i];
+            t[i + 1] = k * b * m[i];
+        }
+    }
+
+    let d = `M${points[0][0]},${points[0][1]}`;
+
+    for (let i = 0; i < n - 1; i++) {
+        const [x0, y0] = points[i];
+        const [x1, y1] = points[i + 1];
+        const h = dx[i] / 3;
+        d += ` C${x0 + h},${y0 + t[i] * h} ${x1 - h},${y1 - t[i + 1] * h} ${x1},${y1}`;
+    }
+
+    return d;
+}
+
+function renderTrendChart(data) {
+
+    const box = document.querySelector("#trendChart");
+    const legend = document.querySelector("#trendLegend");
+
+    if (!data.totalSeconds) {
+        box.innerHTML = `<div class="chart-empty">No tracked work in this period yet.</div>`;
+        legend.innerHTML = "";
+        return;
+    }
+
+    const keys = data.usedKeys;
+    const visible = keys.filter(k => !hiddenTrendSeries.has(k));
+
+    const width = Math.max(300, box.clientWidth || 600);
+    const height = 260;
+    const pad = { top: 44, right: 16, bottom: 26, left: 44 };
+    const plotW = width - pad.left - pad.right;
+    const plotH = height - pad.top - pad.bottom;
+
+    const n = data.buckets.length;
+    const x = i => pad.left + (n === 1 ? plotW / 2 : (plotW * i) / (n - 1));
+
+    const maxMin = Math.max(1, ...visible.flatMap(k => data.buckets.map(b => b.values[k] / 60)));
+    const step = niceStep(maxMin);
+    const top = Math.ceil(maxMin / step) * step;
+    const y = min => pad.top + plotH - (min / top) * plotH;
+    const fmtAxis = m => step >= 60 ? `${m / 60}h` : `${m}m`;
+
+    let svg = `<svg width="${width}" height="${height}" role="img" aria-label="Active time trend by category">`;
+
+    for (let m = 0; m <= top; m += step) {
+        svg += `<line class="grid" x1="${pad.left}" x2="${width - pad.right}" y1="${y(m)}" y2="${y(m)}"/>`;
+        svg += `<text class="axis" x="${pad.left - 8}" y="${y(m) + 4}" text-anchor="end">${fmtAxis(m)}</text>`;
+    }
+
+    const every = n > 24 ? 3 : n > 14 ? 2 : 1;
+    data.buckets.forEach((b, i) => {
+        if (i % every === 0) {
+            svg += `<text class="axis" x="${x(i)}" y="${height - 8}" text-anchor="middle">${b.label}</text>`;
+        }
+    });
+
+    // Мягкая заливка под линиями + сами линии
+    visible.forEach(key => {
+        const color = data.cats.colorOf(key);
+        const pts = data.buckets.map((b, i) => [x(i), y(b.values[key] / 60)]);
+        const line = smoothPath(pts);
+        const gradId = `trend-${key.replace(/[^a-z0-9]/gi, "")}`;
+
+        svg += `
+            <defs>
+                <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="${color}" stop-opacity="0.18"/>
+                    <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+                </linearGradient>
+            </defs>
+            <path d="${line} L${pts[pts.length - 1][0]},${y(0)} L${pts[0][0]},${y(0)} Z" fill="url(#${gradId})"/>
+            <path class="trend-line" d="${line}" stroke="${color}"/>`;
+    });
+
+    // Слой наведения: вертикальная линия, точки, подпись над точкой
+    svg += `<line class="crosshair" id="trendCross" x1="0" x2="0" y1="${pad.top - 8}" y2="${y(0)}"/>`;
+    svg += `<g id="trendDots"></g>`;
+    svg += `<g id="trendBadge" class="trend-badge" style="display:none">
+                <rect rx="8" ry="8" height="36"/>
+                <text class="badge-title" y="15"></text>
+                <text class="badge-sub" y="29"></text>
+            </g>`;
+    svg += `<rect class="hit" x="${pad.left - 10}" y="${pad.top - 10}" width="${plotW + 20}" height="${plotH + 10}"/>`;
+    svg += `</svg>`;
+
+    box.innerHTML = svg;
+
+    const svgEl = box.querySelector("svg");
+    const cross = svgEl.querySelector("#trendCross");
+    const dots = svgEl.querySelector("#trendDots");
+    const badge = svgEl.querySelector("#trendBadge");
+    const hit = svgEl.querySelector(".hit");
+
+    function showAt(i, event) {
+
+        const bucket = data.buckets[i];
+        const cx = x(i);
+
+        cross.setAttribute("x1", cx);
+        cross.setAttribute("x2", cx);
+        cross.classList.add("visible");
+
+        dots.innerHTML = visible.map(k =>
+            `<circle cx="${cx}" cy="${y(bucket.values[k] / 60)}" r="5" fill="${data.cats.colorOf(k)}" class="trend-dot"/>`
+        ).join("");
+
+        // Подпись над самой высокой точкой — как на образце
+        const topKey = visible.reduce((best, k) => bucket.values[k] > bucket.values[best] ? k : best, visible[0]);
+        const topY = y(bucket.values[topKey] / 60);
+        const visibleTotal = visible.reduce((sum, k) => sum + bucket.values[k], 0);
+
+        const title = badge.querySelector(".badge-title");
+        const sub = badge.querySelector(".badge-sub");
+        title.textContent = bucket.title;
+        sub.textContent = visibleTotal ? `${formatMinutes(visibleTotal / 60)} of work` : "no tracked work";
+
+        badge.style.display = "";
+        const w = Math.max(title.getComputedTextLength(), sub.getComputedTextLength()) + 20;
+        const bx = Math.min(Math.max(cx - w / 2, pad.left), width - pad.right - w);
+        const by = Math.max(2, topY - 46);
+
+        badge.querySelector("rect").setAttribute("width", w);
+        badge.setAttribute("transform", `translate(${bx},${by})`);
+        title.setAttribute("x", w / 2);
+        sub.setAttribute("x", w / 2);
+
+        // Подробности по категориям — в обычной подсказке
+        const rows = visible
+            .filter(k => bucket.values[k] > 0)
+            .map(k => `<div class="tt-row"><i style="background:${data.cats.colorOf(k)}"></i>${escapeHtml(k)}<b>${formatMinutes(bucket.values[k] / 60)}</b></div>`)
+            .join("");
+
+        if (rows) {
+            showChartTooltip(event, `<div class="tt-title">${bucket.title}</div>${rows}`);
+        } else {
+            hideChartTooltip();
+        }
+    }
+
+    function hide() {
+        cross.classList.remove("visible");
+        dots.innerHTML = "";
+        badge.style.display = "none";
+        hideChartTooltip();
+    }
+
+    hit.addEventListener("mousemove", (event) => {
+        const rect = svgEl.getBoundingClientRect();
+        const px = event.clientX - rect.left;
+        const i = n === 1 ? 0 : Math.round(((px - pad.left) / plotW) * (n - 1));
+        showAt(Math.max(0, Math.min(n - 1, i)), event);
+    });
+
+    hit.addEventListener("mouseleave", hide);
+
+    // Легенда-переключатель
+    legend.innerHTML = keys.map(k => `
+        <button type="button" class="legend-toggle ${hiddenTrendSeries.has(k) ? "off" : ""}" data-key="${escapeHtml(k)}">
+            <i style="background:${data.cats.colorOf(k)}"></i>${escapeHtml(k)}
+        </button>`).join("");
+
+    legend.querySelectorAll(".legend-toggle").forEach(button => {
+        button.addEventListener("click", () => {
+            const key = button.dataset.key;
+
+            // Последнюю видимую линию не прячем
+            if (!hiddenTrendSeries.has(key) && visible.length === 1) return;
+
+            hiddenTrendSeries.has(key) ? hiddenTrendSeries.delete(key) : hiddenTrendSeries.add(key);
+            renderTrendChart(data);
+        });
+    });
 }
 
 

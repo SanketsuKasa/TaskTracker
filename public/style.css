@@ -3672,3 +3672,89 @@ body.productivity-on .analytics.prod-only {
         gap: 10px;
     }
 }
+
+
+/* ---------- Линейный график тренда ---------- */
+
+.trend-chart .trend-line {
+    fill: none;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.trend-chart .crosshair {
+    stroke: #4a5060;
+    stroke-width: 1;
+    stroke-dasharray: 3 3;
+    opacity: 0;
+}
+
+.trend-chart .crosshair.visible {
+    opacity: 1;
+}
+
+.trend-chart .trend-dot {
+    stroke: #11141b;
+    stroke-width: 2.5;
+}
+
+.trend-chart .hit:hover {
+    fill: transparent;
+}
+
+.trend-badge rect {
+    fill: #2a2f3b;
+    stroke: #3a4050;
+}
+
+.trend-badge text {
+    text-anchor: middle;
+}
+
+.trend-badge .badge-title {
+    fill: white;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.trend-badge .badge-sub {
+    fill: #a3a9b6;
+    font-size: 10px;
+}
+
+.legend-toggle {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    padding: 5px 11px;
+
+    border: 1px solid #292e39;
+    border-radius: 20px;
+    background: transparent;
+    color: #d5d8df;
+
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.legend-toggle i {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.legend-toggle:hover {
+    border-color: #3a4050;
+}
+
+.legend-toggle.off {
+    color: #606777;
+    border-style: dashed;
+}
+
+.legend-toggle.off i {
+    opacity: 0.25;
+}
