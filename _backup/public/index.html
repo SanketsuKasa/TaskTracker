@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Task Tracker</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- Боковое меню -->
+        <aside class="sidebar">
+
+            <div class="logo">
+                <div class="logo-icon">✓</div>
+                <span>Task Tracker</span>
+            </div>
+
+            <nav>
+
+                <a href="#" class="nav-item active">
+                    <span>▦</span>
+                    Dashboard
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span>☷</span>
+                    All Tasks
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span>◷</span>
+                    In Progress
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span>✓</span>
+                    Completed
+                </a>
+
+            </nav>
+
+            <div class="sidebar-bottom">
+
+                <div class="user">
+
+                    <div class="avatar">
+                        U
+                    </div>
+
+                    <div>
+                        <strong>User</strong>
+                        <small>Task Manager</small>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </aside>
+
+
+        <!-- Основная часть -->
+        <main class="main">
+
+            <header class="header">
+
+                <div>
+                    <h1>Dashboard</h1>
+                    <p>Manage your tasks efficiently.</p>
+                </div>
+
+                <button class="add-button">
+                    + New Task
+                </button>
+
+            </header>
+
+
+            <!-- ======================================== -->
+            <!-- СТАТИСТИКА -->
+            <!-- ======================================== -->
+
+            <section class="stats">
+
+                <!-- Total Tasks -->
+                <div class="stat-card">
+
+                    <div class="stat-icon purple">
+                        ☷
+                    </div>
+
+                    <div>
+                        <span>Total Tasks</span>
+
+                        <strong id="totalTasks">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <!-- In Progress -->
+                <div class="stat-card">
+
+                    <div class="stat-icon blue">
+                        ◷
+                    </div>
+
+                    <div>
+                        <span>In Progress</span>
+
+                        <strong id="inProgressTasks">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Completed -->
+                <div class="stat-card">
+
+                    <div class="stat-icon green">
+                        ✓
+                    </div>
+
+                    <div>
+                        <span>Completed</span>
+
+                        <strong id="completedTasks">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ======================================== -->
+            <!-- ЗАДАЧИ -->
+            <!-- ======================================== -->
+
+            <section class="tasks-section">
+
+                <div class="tasks-header">
+
+                    <div>
+
+                        <h2>My Tasks</h2>
+
+                        <p>
+                            Keep track of your current work.
+                        </p>
+
+                    </div>
+
+
+                    <div class="filters">
+
+                        <button class="filter active">
+                            All
+                        </button>
+
+                        <button class="filter">
+                            Todo
+                        </button>
+
+                        <button class="filter">
+                            In Progress
+                        </button>
+
+                        <button class="filter">
+                            Done
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Поиск -->
+                <div class="search">
+
+                    <span>⌕</span>
+
+                    <input
+                        type="text"
+                        placeholder="Search tasks..."
+                    >
+
+                </div>
+
+
+                <!-- Карточки задач -->
+                <div class="task-list">
+
+                    <!--
+                        Задачи загружаются
+                        через app.js
+                    -->
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+
+    <!-- ======================================== -->
+    <!-- ОКНО СОЗДАНИЯ ЗАДАЧИ -->
+    <!-- ======================================== -->
+
+    <div class="modal-overlay" id="taskModal">
+
+        <div class="modal">
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h2>
+                        Create New Task
+                    </h2>
+
+                    <p>
+                        Add a new task to your project.
+                    </p>
+
+                </div>
+
+
+                <button
+                    class="close-modal"
+                    id="closeModal"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <form id="taskForm">
+
+                <!-- Название -->
+
+                <div class="form-group">
+
+                    <label for="taskTitle">
+                        Task title
+                    </label>
+
+                    <input
+                        type="text"
+                        id="taskTitle"
+                        placeholder="Enter task title..."
+                        required
+                    >
+
+                </div>
+
+
+                <!-- Описание -->
+
+                <div class="form-group">
+
+                    <label for="taskDescription">
+                        Description
+                    </label>
+
+                    <textarea
+                        id="taskDescription"
+                        placeholder="Describe your task..."
+                    ></textarea>
+
+                </div>
+
+
+                <!-- Категория -->
+
+                <div class="form-group">
+
+                    <label for="taskCategory">
+                        Category
+                    </label>
+
+                    <select id="taskCategory">
+
+                        <option value="Development">
+                            Development
+                        </option>
+
+                        <option value="Design">
+                            Design
+                        </option>
+
+                        <option value="Study">
+                            Study
+                        </option>
+
+                        <option value="Personal">
+                            Personal
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- Кнопки -->
+
+                <div class="modal-buttons">
+
+                    <button
+                        type="button"
+                        class="cancel-button"
+                        id="cancelModal"
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="create-button"
+                    >
+                        Create Task
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- JavaScript -->
+    <script src="app.js"></script>
+
+</body>
+
+</html>

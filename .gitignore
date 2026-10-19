@@ -1,0 +1,8 @@
+# Пароль від пошти — НЕ публікувати
+mail.config.json
+.env
+
+# Системні файли
+.DS_Store
+Thumbs.db
+*.log

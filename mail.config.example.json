@@ -1,0 +1,7 @@
+{
+  "user": "your.address@gmail.com",
+  "pass": "abcd efgh ijkl mnop",
+  "fromName": "Task Tracker",
+  "host": "smtp.gmail.com",
+  "port": 465
+}

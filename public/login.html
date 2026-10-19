@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Task Tracker — Вход</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="auth-page">
+
+    <div class="auth-card" data-screen="login">
+
+        <div class="logo auth-logo">
+            <div class="logo-icon">✓</div>
+            <span>Task Tracker</span>
+        </div>
+
+        <!-- Вкладки (только на экранах входа и регистрации) -->
+        <div class="auth-tabs">
+            <button type="button" class="auth-tab active" data-screen="login">Sign in</button>
+            <button type="button" class="auth-tab" data-screen="register">Create account</button>
+        </div>
+
+        <h1 id="authTitle">Welcome back</h1>
+        <p class="auth-subtitle" id="authSubtitle">Sign in with your email to see your tasks.</p>
+
+        <form id="authForm" novalidate>
+
+            <!-- Имя -->
+            <div class="form-group only-register">
+                <label for="authName">Name</label>
+                <input type="text" id="authName" placeholder="Your name" autocomplete="name" maxlength="40">
+            </div>
+
+            <!-- Почта -->
+            <div class="form-group only-login only-register only-forgot">
+                <label for="authEmail">Email</label>
+                <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email">
+            </div>
+
+            <!-- Код из письма -->
+            <div class="form-group only-verify only-reset">
+                <label>Code from the email</label>
+                <div class="code-inputs" id="codeInputs">
+                    <input type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code">
+                    <input type="text" inputmode="numeric" maxlength="1">
+                    <input type="text" inputmode="numeric" maxlength="1">
+                    <input type="text" inputmode="numeric" maxlength="1">
+                    <input type="text" inputmode="numeric" maxlength="1">
+                    <input type="text" inputmode="numeric" maxlength="1">
+                </div>
+            </div>
+
+            <!-- Пароль -->
+            <div class="form-group only-login only-register only-reset">
+                <div class="label-row">
+                    <label for="authPassword" id="passwordLabel">Password</label>
+                    <button type="button" class="link-button only-login" id="forgotLink">Forgot password?</button>
+                </div>
+                <div class="password-field">
+                    <input type="password" id="authPassword" placeholder="At least 6 characters" autocomplete="current-password">
+                    <button type="button" id="togglePassword">Show</button>
+                </div>
+            </div>
+
+            <!-- Повтор пароля -->
+            <div class="form-group only-register only-reset">
+                <label for="authPassword2">Repeat password</label>
+                <input type="password" id="authPassword2" placeholder="Repeat password" autocomplete="new-password">
+            </div>
+
+            <div class="auth-info" id="authInfo"></div>
+            <div class="auth-error" id="authError"></div>
+
+            <button type="submit" class="create-button auth-submit" id="authSubmit">
+                Sign in
+            </button>
+
+            <!-- Отправить код ещё раз / назад -->
+            <div class="auth-links only-verify only-reset only-forgot">
+                <button type="button" class="link-button only-verify only-reset" id="resendButton">Send the code again</button>
+                <button type="button" class="link-button" id="backButton">← Back to sign in</button>
+            </div>
+
+        </form>
+
+    </div>
+
+
+    <script>
+
+        // Если уже вошли — сразу в приложение
+        if (localStorage.getItem("token")) {
+            location.href = "/";
+        }
+
+        const card = document.querySelector(".auth-card");
+        const tabs = document.querySelectorAll(".auth-tab");
+        const form = document.querySelector("#authForm");
+
+        const nameInput = document.querySelector("#authName");
+        const emailInput = document.querySelector("#authEmail");
+        const passwordInput = document.querySelector("#authPassword");
+        const password2Input = document.querySelector("#authPassword2");
+        const codeInputs = [...document.querySelectorAll("#codeInputs input")];
+
+        const passwordLabel = document.querySelector("#passwordLabel");
+        const infoBox = document.querySelector("#authInfo");
+        const errorBox = document.querySelector("#authError");
+        const submitButton = document.querySelector("#authSubmit");
+        const resendButton = document.querySelector("#resendButton");
+        const title = document.querySelector("#authTitle");
+        const subtitle = document.querySelector("#authSubtitle");
+
+        let screen = "login";
+        let pendingEmail = "";   // почта, на которую отправлен код
+        let resendTimer = null;
+
+        // Тексты для каждого экрана
+        const screens = {
+            login: {
+                title: "Welcome back",
+                subtitle: "Sign in with your email to see your tasks.",
+                button: "Sign in",
+                password: "Password"
+            },
+            register: {
+                title: "Create your account",
+                subtitle: "We will send a 6-digit code to confirm your email.",
+                button: "Create account",
+                password: "Password"
+            },
+            verify: {
+                title: "Check your email",
+                subtitle: "",
+                button: "Confirm email"
+            },
+            forgot: {
+                title: "Forgot password?",
+                subtitle: "Enter your email and we will send you a code to reset it.",
+                button: "Send code"
+            },
+            reset: {
+                title: "Set a new password",
+                subtitle: "",
+                button: "Save new password",
+                password: "New password"
+            }
+        };
+
+
+        // ========================================
+        // ПЕРЕКЛЮЧЕНИЕ ЭКРАНОВ
+        // ========================================
+
+        function setScreen(newScreen) {
+
+            screen = newScreen;
+            card.dataset.screen = screen;
+
+            tabs.forEach(tab => {
+                tab.classList.toggle("active", tab.dataset.screen === screen);
+            });
+
+            const config = screens[screen];
+
+            title.textContent = config.title;
+            subtitle.textContent = config.subtitle;
+            submitButton.textContent = config.button;
+
+            if (config.password) {
+                passwordLabel.textContent = config.password;
+            }
+
+            if (screen === "verify" || screen === "reset") {
+                subtitle.innerHTML = `We sent a 6-digit code to <strong>${escapeHtml(pendingEmail)}</strong>.`;
+                codeInputs.forEach(input => input.value = "");
+                setTimeout(() => codeInputs[0].focus(), 50);
+                startResendTimer();
+            }
+
+            passwordInput.autocomplete = screen === "login" ? "current-password" : "new-password";
+
+            if (screen === "reset") {
+                passwordInput.value = "";
+                password2Input.value = "";
+            }
+
+            errorBox.textContent = "";
+        }
+
+        tabs.forEach(tab => {
+            tab.addEventListener("click", () => {
+                infoBox.textContent = "";
+                setScreen(tab.dataset.screen);
+            });
+        });
+
+        document.querySelector("#forgotLink").addEventListener("click", () => {
+            infoBox.textContent = "";
+            setScreen("forgot");
+        });
+
+        document.querySelector("#backButton").addEventListener("click", () => {
+            infoBox.textContent = "";
+            setScreen("login");
+        });
+
+
+        // Показать / скрыть пароль
+        const togglePassword = document.querySelector("#togglePassword");
+
+        togglePassword.addEventListener("click", () => {
+            const hidden = passwordInput.type === "password";
+            passwordInput.type = hidden ? "text" : "password";
+            togglePassword.textContent = hidden ? "Hide" : "Show";
+        });
+
+
+        // ========================================
+        // 6 КЛЕТОЧЕК ДЛЯ КОДА
+        // ========================================
+
+        codeInputs.forEach((input, index) => {
+
+            input.addEventListener("input", () => {
+
+                // Оставляем только цифры
+                input.value = input.value.replace(/\D/g, "").slice(-1);
+
+                if (input.value && index < codeInputs.length - 1) {
+                    codeInputs[index + 1].focus();
+                }
+
+                // Все 6 цифр введены — подтверждаем автоматически (только на экране verify)
+                if (screen === "verify" && getCode().length === 6) {
+                    form.requestSubmit();
+                }
+            });
+
+            input.addEventListener("keydown", (event) => {
+                if (event.key === "Backspace" && !input.value && index > 0) {
+                    codeInputs[index - 1].focus();
+                }
+            });
+
+            // Вставка кода целиком (Ctrl+V)
+            input.addEventListener("paste", (event) => {
+
+                const digits = (event.clipboardData.getData("text") || "").replace(/\D/g, "").slice(0, 6);
+
+                if (!digits) return;
+
+                event.preventDefault();
+
+                digits.split("").forEach((digit, i) => {
+                    if (codeInputs[i]) codeInputs[i].value = digit;
+                });
+
+                codeInputs[Math.min(digits.length, 5)].focus();
+
+                if (screen === "verify" && digits.length === 6) {
+                    form.requestSubmit();
+                }
+            });
+        });
+
+        function getCode() {
+            return codeInputs.map(input => input.value).join("");
+        }
+
+
+        // ========================================
+        // ПОВТОРНАЯ ОТПРАВКА (раз в минуту)
+        // ========================================
+
+        function startResendTimer(seconds = 60) {
+
+            clearInterval(resendTimer);
+
+            let left = seconds;
+
+            resendButton.disabled = true;
+            resendButton.textContent = `Send again in ${left}s`;
+
+            resendTimer = setInterval(() => {
+                left--;
+                if (left <= 0) {
+                    clearInterval(resendTimer);
+                    resendButton.disabled = false;
+                    resendButton.textContent = "Send the code again";
+                } else {
+                    resendButton.textContent = `Send again in ${left}s`;
+                }
+            }, 1000);
+        }
+
+        resendButton.addEventListener("click", async () => {
+
+            errorBox.textContent = "";
+
+            try {
+                const data = await post("/api/resend-code", {
+                    email: pendingEmail,
+                    purpose: screen === "reset" ? "reset" : "verify"
+                });
+                showDeliveryInfo(data.delivered);
+                startResendTimer();
+            } catch (error) {
+                errorBox.textContent = error.message;
+            }
+        });
+
+
+        // ========================================
+        // ЗАПРОСЫ
+        // ========================================
+
+        async function post(url, body) {
+
+            const response = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+
+            let data;
+
+            try {
+                data = await response.json();
+            } catch (error) {
+                // Сервер прислал не JSON — скорее всего запущена старая версия
+                throw new Error("Server error. Restart the server: Ctrl+C, then node server.js");
+            }
+
+            if (!response.ok) {
+                const err = new Error(data.error || "Error");
+                err.data = data;
+                throw err;
+            }
+
+            return data;
+        }
+
+        // Подсказка, если письма пока печатаются в терминале
+        function showDeliveryInfo(delivered) {
+            infoBox.textContent = delivered === false
+                ? "Email is not configured yet — the code is printed in the server terminal."
+                : "";
+        }
+
+        function finishLogin(data) {
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("user", JSON.stringify(data.user));
+            location.href = "/";
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement("div");
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+
+        // ========================================
+        // ОТПРАВКА ФОРМЫ
+        // ========================================
+
+        form.addEventListener("submit", async (event) => {
+
+            event.preventDefault();
+
+            errorBox.textContent = "";
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            // ---------- Проверки на клиенте ----------
+
+            if (["login", "register", "forgot"].includes(screen) &&
+                !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                errorBox.textContent = "Enter a valid email";
+                return;
+            }
+
+            if (["login", "register", "reset"].includes(screen) && password.length < 6) {
+                errorBox.textContent = "Password must be at least 6 characters";
+                return;
+            }
+
+            if (screen === "register" && !nameInput.value.trim()) {
+                errorBox.textContent = "Enter your name";
+                return;
+            }
+
+            if ((screen === "register" || screen === "reset") && password !== password2Input.value) {
+                errorBox.textContent = "Passwords do not match";
+                return;
+            }
+
+            if ((screen === "verify" || screen === "reset") && getCode().length !== 6) {
+                errorBox.textContent = "Enter all 6 digits of the code";
+                return;
+            }
+
+            submitButton.disabled = true;
+
+            try {
+
+                if (screen === "login") {
+
+                    finishLogin(await post("/api/login", { email, password }));
+
+                } else if (screen === "register") {
+
+                    const data = await post("/api/register", {
+                        name: nameInput.value.trim(),
+                        email,
+                        password
+                    });
+
+                    pendingEmail = data.email;
+                    showDeliveryInfo(data.delivered);
+                    setScreen("verify");
+
+                } else if (screen === "verify") {
+
+                    finishLogin(await post("/api/verify-email", {
+                        email: pendingEmail,
+                        code: getCode()
+                    }));
+
+                } else if (screen === "forgot") {
+
+                    const data = await post("/api/forgot-password", { email });
+
+                    pendingEmail = email.toLowerCase();
+                    showDeliveryInfo(data.delivered);
+                    setScreen("reset");
+
+                } else if (screen === "reset") {
+
+                    finishLogin(await post("/api/reset-password", {
+                        email: pendingEmail,
+                        code: getCode(),
+                        password
+                    }));
+
+                }
+
+            } catch (error) {
+
+                // Пытаемся войти, а почта не подтверждена — показываем ввод кода
+                if (error.data && error.data.needsVerification) {
+                    pendingEmail = error.data.email;
+                    showDeliveryInfo(error.data.delivered);
+                    setScreen("verify");
+                    errorBox.textContent = "Confirm your email first — we sent you a code.";
+                } else {
+                    errorBox.textContent = error.message;
+                }
+
+                // Неверный код — очищаем клеточки
+                if (screen === "verify") {
+                    codeInputs.forEach(input => input.value = "");
+                    codeInputs[0].focus();
+                }
+
+            } finally {
+
+                submitButton.disabled = false;
+
+            }
+
+        });
+
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Task Tracker</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- Боковое меню -->
+        <aside class="sidebar">
+
+            <div class="logo">
+                <div class="logo-icon">✓</div>
+                <span>Task Tracker</span>
+            </div>
+
+            <nav>
+
+                <a href="#" class="nav-item active" data-view="dashboard">
+                    <span>▦</span>
+                    Dashboard
+                </a>
+
+                <a href="#" class="nav-item" data-view="all">
+                    <span>☷</span>
+                    All Tasks
+                    <em class="nav-count" id="navAll">0</em>
+                </a>
+
+                <a href="#" class="nav-item" data-view="progress">
+                    <span>◷</span>
+                    In Progress
+                    <em class="nav-count" id="navProgress">0</em>
+                </a>
+
+                <a href="#" class="nav-item" data-view="done">
+                    <span>✓</span>
+                    Completed
+                    <em class="nav-count" id="navDone">0</em>
+                </a>
+
+                <a href="#" class="nav-item" data-view="calendar">
+                    <span>▤</span>
+                    Calendar
+                </a>
+
+            </nav>
+
+            <div class="sidebar-bottom">
+
+                <div class="user">
+
+                    <div class="avatar">
+                        U
+                    </div>
+
+                    <div>
+                        <strong>User</strong>
+                        <small>Task Manager</small>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </aside>
+
+
+        <!-- Основная часть -->
+        <main class="main" id="main" data-view="dashboard">
+
+            <header class="header">
+
+                <div>
+                    <h1 id="pageTitle">Dashboard</h1>
+                    <p id="pageSubtitle">Manage your tasks efficiently.</p>
+                </div>
+
+                <button class="add-button">
+                    + New Task
+                </button>
+
+            </header>
+
+
+            <!-- ======================================== -->
+            <!-- СТАТИСТИКА -->
+            <!-- ======================================== -->
+
+            <section class="stats" id="stats">
+
+                <!-- Total Tasks -->
+                <div class="stat-card">
+
+                    <div class="stat-icon purple">
+                        ☷
+                    </div>
+
+                    <div>
+                        <span>Total Tasks</span>
+
+                        <strong id="totalTasks">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <!-- In Progress -->
+                <div class="stat-card">
+
+                    <div class="stat-icon blue">
+                        ◷
+                    </div>
+
+                    <div>
+                        <span>In Progress</span>
+
+                        <strong id="inProgressTasks">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Completed -->
+                <div class="stat-card">
+
+                    <div class="stat-icon green">
+                        ✓
+                    </div>
+
+                    <div>
+                        <span>Completed</span>
+
+                        <strong id="completedTasks">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ======================================== -->
+            <!-- ЗАДАЧИ -->
+            <!-- ======================================== -->
+
+            <div class="content-grid">
+
+            <section class="tasks-section">
+
+                <div class="tasks-header">
+
+                    <div>
+
+                        <h2>My Tasks</h2>
+
+                        <p>
+                            Keep track of your current work.
+                        </p>
+
+                    </div>
+
+
+                    <div class="filters">
+
+                        <button class="filter active" data-filter="all">
+                            All
+                        </button>
+
+                        <button class="filter" data-filter="todo">
+                            Todo
+                        </button>
+
+                        <button class="filter" data-filter="progress">
+                            In Progress
+                        </button>
+
+                        <button class="filter" data-filter="done">
+                            Done
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Выбранный день календаря -->
+                <div class="date-chip" id="dateChip">
+                    <span id="dateChipText"></span>
+                    <button type="button" id="clearDate" title="Show all dates">×</button>
+                </div>
+
+
+                <!-- Поиск -->
+                <div class="search">
+
+                    <span>⌕</span>
+
+                    <input
+                        type="text"
+                        placeholder="Search tasks..."
+                    >
+
+                </div>
+
+
+                <!-- Карточки задач -->
+                <div class="task-list">
+
+                    <!--
+                        Задачи загружаются
+                        через app.js
+                    -->
+
+                </div>
+
+                <div class="empty-state" id="emptyState">
+                    <div>☷</div>
+                    <strong>No tasks here</strong>
+                    <p>Try another filter or create a new task.</p>
+                </div>
+
+            </section>
+
+
+            <!-- ======================================== -->
+            <!-- КАЛЕНДАРЬ -->
+            <!-- ======================================== -->
+
+            <section class="calendar-card" id="calendarCard">
+
+                <div class="calendar-header">
+
+                    <div>
+                        <h2 id="calendarTitle">Calendar</h2>
+                        <p>Your task schedule</p>
+                    </div>
+
+                    <div class="calendar-nav">
+                        <button type="button" id="prevMonth" title="Previous month">‹</button>
+                        <button type="button" id="todayButton">Today</button>
+                        <button type="button" id="nextMonth" title="Next month">›</button>
+                    </div>
+
+                </div>
+
+                <div class="calendar-weekdays">
+                    <span>Mon</span>
+                    <span>Tue</span>
+                    <span>Wed</span>
+                    <span>Thu</span>
+                    <span>Fri</span>
+                    <span>Sat</span>
+                    <span>Sun</span>
+                </div>
+
+                <div class="calendar-grid" id="calendarGrid"></div>
+
+                <div class="calendar-legend">
+                    <span><i class="dot todo-dot"></i>Todo</span>
+                    <span><i class="dot progress-dot"></i>In Progress</span>
+                    <span><i class="dot done-dot"></i>Done</span>
+                    <span><i class="dot overdue-dot"></i>Overdue</span>
+                </div>
+
+                <p class="calendar-hint">
+                    Click a day to see its tasks. Double-click to add a task for that day.
+                </p>
+
+                <div class="upcoming">
+                    <h3>Upcoming deadlines</h3>
+                    <ul id="upcomingList"></ul>
+                </div>
+
+            </section>
+
+            </div>
+
+        </main>
+
+    </div>
+
+
+    <!-- ======================================== -->
+    <!-- ОКНО СОЗДАНИЯ ЗАДАЧИ -->
+    <!-- ======================================== -->
+
+    <div class="modal-overlay" id="taskModal">
+
+        <div class="modal">
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h2>
+                        Create New Task
+                    </h2>
+
+                    <p>
+                        Add a new task to your project.
+                    </p>
+
+                </div>
+
+
+                <button
+                    class="close-modal"
+                    id="closeModal"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <form id="taskForm">
+
+                <!-- Название -->
+
+                <div class="form-group">
+
+                    <label for="taskTitle">
+                        Task title
+                    </label>
+
+                    <input
+                        type="text"
+                        id="taskTitle"
+                        placeholder="Enter task title..."
+                        required
+                    >
+
+                </div>
+
+
+                <!-- Описание -->
+
+                <div class="form-group">
+
+                    <label for="taskDescription">
+                        Description
+                    </label>
+
+                    <textarea
+                        id="taskDescription"
+                        placeholder="Describe your task..."
+                    ></textarea>
+
+                </div>
+
+
+                <!-- Категория -->
+
+                <div class="form-group">
+
+                    <label for="taskCategory">
+                        Category
+                    </label>
+
+                    <select id="taskCategory">
+
+                        <option value="Development">
+                            Development
+                        </option>
+
+                        <option value="Design">
+                            Design
+                        </option>
+
+                        <option value="Study">
+                            Study
+                        </option>
+
+                        <option value="Personal">
+                            Personal
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- Дедлайн -->
+
+                <div class="form-group">
+
+                    <label for="taskDeadline">
+                        Deadline
+                    </label>
+
+                    <input
+                        type="date"
+                        id="taskDeadline"
+                    >
+
+                </div>
+
+
+                <!-- Кнопки -->
+
+                <div class="modal-buttons">
+
+                    <button
+                        type="button"
+                        class="cancel-button"
+                        id="cancelModal"
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="create-button"
+                    >
+                        Create Task
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- JavaScript -->
+    <script src="app.js"></script>
+
+</body>
+
+</html>

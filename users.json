@@ -1,0 +1,11 @@
+[
+  {
+    "id": 1792409455816,
+    "name": "Alex",
+    "email": "saanla1t.oleksander@gmail.com",
+    "salt": "e379bd710c1720a7750b8bd9e1a84372",
+    "passwordHash": "ebd6a393ff45ac3d9de98b0cabf69f94df470e551a767efa2418f53d5005bd04e8e7ea44565c019ac4a224e0fa8fae76e108d516ff76183de1631a4cc0d0c176",
+    "createdAt": "2026-10-19T11:30:55.848Z",
+    "avatar": "/uploads/avatars/1792409455816-1792410511047.jpg"
+  }
+]
