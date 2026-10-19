@@ -2595,3 +2595,531 @@ nav.settings-tabs {
     color: #606777;
     font-size: 12px;
 }
+
+
+/* ========================================
+   АНАЛИЗ ПРОДУКТИВНОСТИ
+======================================== */
+
+/* Всё «продуктивное» видно только когда анализ включён */
+.prod-only {
+    display: none !important;
+}
+
+body.productivity-on .prod-only {
+    display: block !important;
+}
+
+
+/* В режиме анализа статус меняют кнопки, а не выпадающий список */
+body.productivity-on #taskModal.editing .status-group {
+    display: none;
+}
+
+.prod-block {
+    margin: 4px 0 20px;
+    padding: 18px 18px 2px;
+
+    border: 1px solid #2e2654;
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(124, 92, 255, 0.07), transparent 70%);
+}
+
+
+/* ---------- Звёзды сложности ---------- */
+
+.stars {
+    display: flex;
+    gap: 2px;
+}
+
+.stars button {
+    border: none;
+    background: transparent;
+    color: #3a4050;
+
+    padding: 0 2px;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.12s, transform 0.12s;
+}
+
+.stars button.on {
+    color: #f5c451;
+}
+
+.stars button.hover {
+    color: #f8d77f;
+    transform: scale(1.12);
+}
+
+.field-hint {
+    display: block;
+    margin-top: 4px;
+    color: #73798a;
+    font-size: 12px;
+}
+
+
+/* ---------- Сегментные кнопки ---------- */
+
+.segmented {
+    display: flex;
+
+    padding: 3px;
+
+    border: 1px solid #292e39;
+    border-radius: 9px;
+    background: #0d0f14;
+}
+
+.segmented button {
+    flex: 1;
+
+    padding: 8px 6px;
+
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: #858b9b;
+
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.segmented button:hover {
+    color: white;
+}
+
+.segmented button.on {
+    background: #2e2654;
+    color: #e6defe;
+}
+
+#prioritySegment button[data-value="high"].on {
+    background: #3a1d22;
+    color: #ff8a8a;
+}
+
+#prioritySegment button[data-value="low"].on {
+    background: #172c42;
+    color: #7dbdff;
+}
+
+
+/* ---------- Оценка времени ---------- */
+
+.duration-input {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.form-group .duration-input input {
+    width: 70px;
+    text-align: center;
+}
+
+.duration-input span {
+    color: #73798a;
+    font-size: 13px;
+}
+
+
+/* ---------- Прогноз ---------- */
+
+.forecast {
+    margin: -4px 0 18px;
+    padding: 11px 14px;
+
+    border-radius: 9px;
+    background: #183528;
+    color: #b8f0cf;
+
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.forecast span {
+    display: block;
+    color: #7fbf98;
+    font-size: 12px;
+}
+
+.forecast.waiting {
+    background: #1a1d27;
+    color: #858b9b;
+}
+
+.forecast:empty {
+    display: none;
+}
+
+
+/* ---------- Дополнительные поля ---------- */
+
+.more-details {
+    margin-bottom: 18px;
+}
+
+.more-details summary {
+    margin-bottom: 14px;
+
+    color: #a98cff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+}
+
+.more-details summary::before {
+    content: "▸ ";
+}
+
+.more-details[open] summary::before {
+    content: "▾ ";
+}
+
+.segmented.small button {
+    padding: 6px 4px;
+}
+
+.reset-work {
+    margin-right: auto;
+}
+
+
+/* ---------- Карточка: строка работы ---------- */
+
+.status-column {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+}
+
+.work-state {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    color: #858b9b;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.work-state.active {
+    color: #51d48a;
+}
+
+.work-state.active i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #51d48a;
+    animation: pulseDot 1.4s infinite;
+}
+
+@keyframes pulseDot {
+    0% { box-shadow: 0 0 0 0 rgba(81, 212, 138, 0.6); }
+    100% { box-shadow: 0 0 0 7px rgba(81, 212, 138, 0); }
+}
+
+.working-task {
+    border-color: #1f5c3c;
+    box-shadow: inset 3px 0 0 #51d48a;
+}
+
+.work-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    margin-top: 12px;
+    padding-top: 10px;
+
+    border-top: 1px dashed #262b36;
+}
+
+.work-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+
+    color: #73798a;
+    font-size: 12px;
+}
+
+.mini-stars {
+    color: #f5c451;
+    letter-spacing: 1px;
+    font-size: 12px;
+}
+
+.priority-badge {
+    padding: 2px 7px;
+    border-radius: 5px;
+    font-size: 11px;
+}
+
+.priority-badge.high {
+    background: #3a1d22;
+    color: #ff8a8a;
+}
+
+.priority-badge.low {
+    background: #172c42;
+    color: #7dbdff;
+}
+
+.live-timer {
+    color: #d5d8df;
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+}
+
+.live-timer.running {
+    color: #51d48a;
+    font-weight: 700;
+}
+
+.accuracy {
+    padding: 1px 6px;
+    border-radius: 5px;
+    font-size: 11px;
+}
+
+.accuracy.good { background: #183528; color: #51d48a; }
+.accuracy.over { background: #3a1d22; color: #ff8a8a; }
+.accuracy.under { background: #172c42; color: #7dbdff; }
+
+.work-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.work-btn {
+    padding: 6px 12px;
+
+    border: 1px solid #292e39;
+    border-radius: 7px;
+    background: #1a1d27;
+    color: #d5d8df;
+
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.work-btn:hover {
+    border-color: #3a4050;
+    color: white;
+}
+
+.work-btn.start,
+.work-btn.resume {
+    border-color: #1f5c3c;
+    background: #183528;
+    color: #6ee3a0;
+}
+
+.work-btn.start:hover,
+.work-btn.resume:hover {
+    background: #1f4532;
+}
+
+.work-btn.pause {
+    border-color: #4a3d1c;
+    background: #29251a;
+    color: #e6c26e;
+}
+
+.work-btn.finish {
+    border-color: #3b3263;
+    background: #211c3b;
+    color: #c4b2ff;
+}
+
+.stale-warning {
+    margin-top: 10px;
+    padding: 12px 14px;
+
+    border: 1px solid #4a3d1c;
+    border-radius: 9px;
+    background: #211d14;
+    color: #e6c26e;
+
+    font-size: 13px;
+}
+
+.stale-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.stale-stop {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #b6bac5;
+    font-size: 12px;
+}
+
+.stale-time {
+    background: #0d0f14;
+    border: 1px solid #292e39;
+    border-radius: 6px;
+    color: white;
+    padding: 4px 6px;
+    color-scheme: dark;
+}
+
+.form-group input[type="datetime-local"] {
+    color-scheme: dark;
+}
+
+
+/* ---------- Настройки: переключатель ---------- */
+
+.switch-row {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+
+    cursor: pointer;
+}
+
+.switch-row strong {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.switch-row small {
+    color: #73798a;
+    font-size: 13px;
+}
+
+.switch-row input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.switch {
+    position: relative;
+    flex-shrink: 0;
+
+    width: 50px;
+    height: 28px;
+
+    border-radius: 20px;
+    background: #2a2f3b;
+    transition: 0.2s;
+}
+
+.switch::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+
+    width: 22px;
+    height: 22px;
+
+    border-radius: 50%;
+    background: #858b9b;
+    transition: 0.2s;
+}
+
+.switch-row input:checked + .switch {
+    background: #7c5cff;
+}
+
+.switch-row input:checked + .switch::after {
+    left: 25px;
+    background: white;
+}
+
+.switch-row input:focus-visible + .switch {
+    outline: 2px solid #a98cff;
+    outline-offset: 2px;
+}
+
+.productivity-card .form-message {
+    margin: 12px 0 0;
+}
+
+.prod-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+    margin-top: 22px;
+}
+
+.prod-features > div {
+    display: flex;
+    gap: 12px;
+
+    padding: 14px;
+
+    border: 1px solid #222631;
+    border-radius: 10px;
+    background: #151820;
+}
+
+.prod-features span {
+    flex-shrink: 0;
+
+    width: 32px;
+    height: 32px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+    background: #211c3b;
+    color: #c4b2ff;
+}
+
+.prod-features p {
+    color: #73798a;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.prod-features strong {
+    display: block;
+    color: #e6e8ee;
+    font-size: 13px;
+    margin-bottom: 2px;
+}
+
+.prod-note {
+    margin: 16px 0 0;
+}
+
+body:not(.productivity-on) .prod-features {
+    opacity: 0.55;
+}
+
+@media (max-width: 650px) {
+    .work-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

@@ -474,12 +474,31 @@
 
                 <!-- ---------- Продуктивность ---------- -->
                 <div class="settings-panel" data-panel="productivity">
-                    <div class="profile-card coming-soon">
-                        <div class="coming-icon">⚡</div>
-                        <h3>Productivity</h3>
-                        <p>A place for productivity tools and settings. We will design it together.</p>
-                        <span class="soon-badge">Coming soon</span>
+
+                    <div class="profile-card productivity-card">
+
+                        <label class="switch-row">
+                            <span>
+                                <strong>Enable productivity analysis</strong>
+                                <small>Time tracking, difficulty, estimates and forecasts. Turn it off and the app stays simple.</small>
+                            </span>
+                            <input type="checkbox" id="productivityToggle">
+                            <span class="switch" aria-hidden="true"></span>
+                        </label>
+
+                        <div class="form-message" id="productivityMessage"></div>
+
+                        <div class="prod-features">
+                            <div><span>▶</span><p><strong>Start · Pause · Resume · Finish</strong>Tracks only active work time. Breaks are not counted.</p></div>
+                            <div><span>★</span><p><strong>Difficulty 1–5 and priority</strong>Rate each task so the analysis can compare similar ones.</p></div>
+                            <div><span>⏱</span><p><strong>Your estimate vs reality</strong>How long you think it takes, when you plan to finish and the real deadline.</p></div>
+                            <div><span>📈</span><p><strong>Forecast</strong>Learns how accurate your estimates are and predicts active time for new tasks.</p></div>
+                        </div>
+
+                        <p class="card-hint prod-note">Your work history is kept even if you turn the analysis off.</p>
+
                     </div>
+
                 </div>
 
             </section>
@@ -606,9 +625,116 @@
                 <div class="form-error" id="categoryError"></div>
 
 
+                <!-- ======== Аналіз продуктивності (лише коли увімкнено) ======== -->
+
+                <div class="prod-only prod-block">
+
+                    <div class="form-row">
+
+                        <div class="form-group">
+                            <label>Difficulty</label>
+                            <div class="stars" id="difficultyStars">
+                                <button type="button" data-value="1" title="1 — very easy">★</button>
+                                <button type="button" data-value="2" title="2 — easy">★</button>
+                                <button type="button" data-value="3" title="3 — medium">★</button>
+                                <button type="button" data-value="4" title="4 — hard">★</button>
+                                <button type="button" data-value="5" title="5 — very hard">★</button>
+                            </div>
+                            <small class="field-hint" id="difficultyHint">Not rated</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Priority</label>
+                            <div class="segmented" id="prioritySegment">
+                                <button type="button" data-value="low">Low</button>
+                                <button type="button" data-value="medium">Medium</button>
+                                <button type="button" data-value="high">High</button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="form-row">
+
+                        <div class="form-group">
+                            <label>Your time estimate <span class="optional">active work, no breaks</span></label>
+                            <div class="duration-input">
+                                <input type="number" id="estimateHours" min="0" max="999" placeholder="0">
+                                <span>h</span>
+                                <input type="number" id="estimateMins" min="0" max="59" placeholder="0">
+                                <span>min</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="taskType">Task type</label>
+                            <select id="taskType">
+                                <option value="once">One-time</option>
+                                <option value="recurring">Recurring</option>
+                                <option value="project">Part of a bigger project</option>
+                            </select>
+                        </div>
+
+                    </div>
+
+                    <div class="forecast" id="forecastBox"></div>
+
+                    <div class="form-group">
+                        <label for="plannedFinishAt">Planned finish <span class="optional">when you plan to be done</span></label>
+                        <input type="datetime-local" id="plannedFinishAt">
+                    </div>
+
+                    <details class="more-details">
+                        <summary>More details <span class="optional">optional — helps the analysis</span></summary>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Energy before work</label>
+                                <div class="segmented small" id="energySegment">
+                                    <button type="button" data-value="1">1</button>
+                                    <button type="button" data-value="2">2</button>
+                                    <button type="button" data-value="3">3</button>
+                                    <button type="button" data-value="4">4</button>
+                                    <button type="button" data-value="5">5</button>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Overall workload</label>
+                                <div class="segmented small" id="loadSegment">
+                                    <button type="button" data-value="1">1</button>
+                                    <button type="button" data-value="2">2</button>
+                                    <button type="button" data-value="3">3</button>
+                                    <button type="button" data-value="4">4</button>
+                                    <button type="button" data-value="5">5</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="familiarity">Familiarity</label>
+                                <select id="familiarity">
+                                    <option value="">—</option>
+                                    <option value="new">New task</option>
+                                    <option value="similar">Did similar before</option>
+                                    <option value="routine">Regular / well known</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="plannedStartAt">Planned start</label>
+                                <input type="datetime-local" id="plannedStartAt">
+                            </div>
+                        </div>
+                    </details>
+
+                </div>
+
+
                 <!-- Статус (только при редактировании) -->
 
-                <div class="form-group edit-only">
+                <div class="form-group edit-only status-group">
 
                     <label for="taskStatus">
                         Status
@@ -628,7 +754,7 @@
 
                 <div class="form-group">
 
-                    <label for="taskDeadline">
+                    <label for="taskDeadline" id="deadlineLabel">
                         Deadline
                     </label>
 
@@ -643,6 +769,14 @@
                 <!-- Кнопки -->
 
                 <div class="modal-buttons">
+
+                    <button
+                        type="button"
+                        class="link-button reset-work"
+                        id="resetWorkButton"
+                    >
+                        ↺ Back to «Not started»
+                    </button>
 
                     <button
                         type="button"
@@ -710,6 +844,7 @@
 
 
     <!-- JavaScript -->
+    <script src="productivity.js"></script>
     <script src="app.js"></script>
 
 </body>

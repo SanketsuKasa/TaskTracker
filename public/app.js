@@ -265,6 +265,8 @@ async function loadTasks() {
             throw new Error("Ошибка загрузки задач");
         }
 
+        syncServerTime(response);
+
         tasks = await response.json();
 
         render();
@@ -475,6 +477,10 @@ function createTaskCard(task) {
         card.classList.add("overdue-task");
     }
 
+    if (productivityOn && task.workState === "active" && task.status === "progress") {
+        card.classList.add("working-task");
+    }
+
     card.innerHTML = `
 
         <div class="task-check ${isDone ? "checked" : ""}" title="Change status">
@@ -495,10 +501,15 @@ function createTaskCard(task) {
 
             </div>
 
+            ${productivityRowHtml(task)}
+
         </div>
 
-        <div class="task-status ${task.status}">
-            ${statusNames[task.status] || "Todo"}
+        <div class="status-column">
+            <div class="task-status ${task.status}">
+                ${statusNames[task.status] || "Todo"}
+            </div>
+            ${workStateHtml(task)}
         </div>
 
         <button class="more edit-button" title="Edit task" aria-label="Edit task">
@@ -515,6 +526,9 @@ function createTaskCard(task) {
         </button>
 
     `;
+
+    // Кнопки «Почати / Призупинити / ...» (только в режиме анализа)
+    bindProductivityRow(card, task);
 
     // Клик по квадратику: Todo → In Progress → Done → Todo
     card.querySelector(".task-check")
@@ -540,6 +554,12 @@ function createTaskCard(task) {
 // ========================================
 
 async function cycleStatus(task) {
+
+    // В режиме анализа галочка = «Завершить» (сессия закрывается правильно)
+    if (productivityOn) {
+        workAction(task, task.status === "done" ? "reopen" : "finish");
+        return;
+    }
 
     const next = {
         todo: "progress",
@@ -1415,6 +1435,8 @@ function openTaskModal(deadline = selectedDate) {
     // Если выбран день в календаре — подставляем его как дедлайн
     taskDeadline.value = deadline || "";
 
+    productivityFillForm(null);
+
     taskModal.classList.add("active");
     taskTitle.focus();
 }
@@ -1435,6 +1457,8 @@ function openEditModal(task) {
     fillCategorySelect(task.category || "Development", task.subcategory || "");
     taskDeadline.value = task.deadline || "";
     taskStatus.value = task.status || "todo";
+
+    productivityFillForm(task);
 
     taskModal.classList.add("active");
 
@@ -1490,7 +1514,8 @@ taskForm.addEventListener("submit", async (event) => {
         description: taskDescription.value.trim(),
         category: taskCategory.value,
         subcategory: taskSubcategory.value,
-        deadline: taskDeadline.value
+        deadline: taskDeadline.value,
+        ...productivityReadForm()
     };
 
     taskSubmit.disabled = true;
@@ -1506,7 +1531,8 @@ taskForm.addEventListener("submit", async (event) => {
 
             const response = await api(`/api/tasks/${task.id}`, {
                 method: "PATCH",
-                body: JSON.stringify({ ...fields, status: taskStatus.value })
+                // В режиме анализа статус меняют кнопки «Почати / Завершити», а не это поле
+                body: JSON.stringify(productivityOn ? fields : { ...fields, status: taskStatus.value })
             });
 
             const updated = await response.json();
@@ -1607,6 +1633,8 @@ function showUser(user) {
     userAvatar.textContent = user.avatar ? "" : initial;
 
     fillProfile(user);
+
+    applyProductivityMode(user.settings && user.settings.productivityEnabled);
 }
 
 async function loadUser() {

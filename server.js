@@ -3,6 +3,7 @@ const path = require("path");
 const fs = require("fs");
 const crypto = require("crypto");
 const { initMailer, sendCode } = require("./mailer");
+const worklog = require("./worklog");
 
 const app = express();
 const PORT = 3000;
@@ -92,7 +93,10 @@ function publicUser(user) {
         email: user.email,
         avatar: user.avatar || "",
         emailVerified: user.emailVerified !== false,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
+        settings: {
+            productivityEnabled: Boolean(user.settings && user.settings.productivityEnabled)
+        }
     };
 }
 
@@ -646,6 +650,27 @@ app.post("/api/profile/password", auth, (req, res) => {
 
 
 // ==============================
+// НАСТРОЙКИ ПОЛЬЗОВАТЕЛЯ
+// ==============================
+
+app.patch("/api/settings", auth, (req, res) => {
+
+    const users = readJson(usersFile);
+    const user = users.find(u => u.id === req.user.id);
+
+    user.settings = user.settings || {};
+
+    if (req.body.productivityEnabled !== undefined) {
+        user.settings.productivityEnabled = Boolean(req.body.productivityEnabled);
+    }
+
+    writeJson(usersFile, users);
+
+    res.json(publicUser(user));
+});
+
+
+// ==============================
 // КАТЕГОРИИ (у каждого пользователя свои)
 // ==============================
 
@@ -840,8 +865,14 @@ app.get("/api/tasks", (req, res) => {
 
     try {
 
+        const sessions = worklog.readSessions();
+
         const tasks = readJson(tasksFile)
-            .filter(task => task.userId === req.user.id);
+            .filter(task => task.userId === req.user.id)
+            .map(task => worklog.withWork(task, sessions));
+
+        // Время сервера — чтобы таймер в браузере не зависел от неточных часов
+        res.set("X-Server-Time", new Date().toISOString());
 
         res.json(tasks);
 
@@ -872,6 +903,14 @@ app.post("/api/tasks", (req, res) => {
             return res.status(400).json({ error: "Введите название" });
         }
 
+        let plan;
+
+        try {
+            plan = worklog.parsePlanFields(req.body);
+        } catch (error) {
+            return res.status(400).json({ error: error.message });
+        }
+
         const tasks = readJson(tasksFile);
 
         const newTask = {
@@ -882,14 +921,26 @@ app.post("/api/tasks", (req, res) => {
             category: cleanText(req.body.category, 30) || "Development",
             subcategory: cleanText(req.body.subcategory, 40),
             deadline: isValidDate(req.body.deadline) ? req.body.deadline : "",
-            status: "todo"
+            status: "todo",
+            workState: null,
+            createdAt: new Date().toISOString(),
+            ...plan
         };
+
+        // Первоначальный план сохраняем отдельно — он не перезаписывается
+        newTask.initialPlan = worklog.initialPlan(newTask);
 
         tasks.push(newTask);
 
         writeJson(tasksFile, tasks);
 
-        res.status(201).json(newTask);
+        const events = [{ type: "created", data: newTask.initialPlan }];
+        if (newTask.plannedStartAt) {
+            events.push({ type: "planned_start_set", data: { to: newTask.plannedStartAt } });
+        }
+        worklog.logEvents(req.user.id, newTask.id, events);
+
+        res.status(201).json(worklog.withWork(newTask, worklog.readSessions()));
 
     } catch (error) {
 
@@ -963,6 +1014,19 @@ app.patch("/api/tasks/:id", (req, res) => {
 
         }
 
+        // Поля плана (сложность, оценка, сроки) — проверяем до любых изменений
+        let plan;
+
+        try {
+            plan = worklog.parsePlanFields(req.body);
+        } catch (error) {
+            return res.status(400).json({ error: error.message });
+        }
+
+        const sessions = worklog.readSessions();
+        const before = { ...task };
+        let statusEvents = [];
+
         // Разрешенные статусы
         const allowedStatuses = [
             "todo",
@@ -981,6 +1045,7 @@ app.patch("/api/tasks/:id", (req, res) => {
 
             }
 
+            statusEvents = worklog.onStatusChange(task, sessions, req.body.status);
             task.status = req.body.status;
 
         }
@@ -1024,9 +1089,18 @@ app.patch("/api/tasks/:id", (req, res) => {
 
         }
 
-        writeJson(tasksFile, tasks);
+        Object.assign(task, plan);
 
-        res.json(task);
+        writeJson(tasksFile, tasks);
+        worklog.saveSessions(sessions);
+
+        // Журнал: что изменилось в плане (старые значения остаются в событиях)
+        worklog.logEvents(req.user.id, task.id, [
+            ...statusEvents,
+            ...worklog.planChangeEvents(before, { ...plan, deadline: req.body.deadline })
+        ]);
+
+        res.json(worklog.withWork(task, sessions));
 
     } catch (error) {
 
@@ -1038,6 +1112,60 @@ app.patch("/api/tasks/:id", (req, res) => {
 
     }
 
+});
+
+
+// ==============================
+// РАБОТА НАД ЗАДАЧЕЙ: Почати / Призупинити / Продовжити / Завершити
+// ==============================
+
+app.post("/api/tasks/:id/work", (req, res) => {
+
+    try {
+
+        const tasks = readJson(tasksFile);
+        const task = tasks.find(t => t.id === Number(req.params.id) && t.userId === req.user.id);
+
+        if (!task) {
+            return res.status(404).json({ error: "Задача не найдена" });
+        }
+
+        const sessions = worklog.readSessions();
+        const result = worklog.applyWorkAction(task, sessions, String(req.body.action || ""), req.body);
+
+        if (result.error) {
+            return res.status(result.code).json({ error: result.error });
+        }
+
+        writeJson(tasksFile, tasks);
+        worklog.saveSessions(sessions);
+        worklog.logEvents(req.user.id, task.id, result.events);
+
+        res.set("X-Server-Time", new Date().toISOString());
+        res.json(worklog.withWork(task, sessions));
+
+    } catch (error) {
+
+        console.error(error);
+        res.status(500).json({ error: "Не удалось изменить задачу" });
+
+    }
+});
+
+// История задачи: все сессии и события
+app.get("/api/tasks/:id/history", (req, res) => {
+
+    const id = Number(req.params.id);
+    const task = readJson(tasksFile).find(t => t.id === id && t.userId === req.user.id);
+
+    if (!task) {
+        return res.status(404).json({ error: "Задача не найдена" });
+    }
+
+    res.json({
+        sessions: worklog.readSessions().filter(s => s.taskId === id),
+        events: worklog.getEvents(req.user.id, id)
+    });
 });
 
 
