@@ -4,6 +4,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 const { initMailer, sendCode, sendNotice } = require("./mailer");
 const registerSharing = require("./sharing");
+const registerWishlist = require("./wishlist");
 const worklog = require("./worklog");
 
 const app = express();
@@ -1291,6 +1292,9 @@ app.get("/api/tasks/:id/history", (req, res) => {
 sharing = registerSharing(app, {
     readJson, writeJson, usersFile, tasksFile, auth, worklog, isValidEmail, sendNotice
 });
+
+// Вішліст (wishlist.js)
+registerWishlist(app, { readJson, writeJson, usersFile, auth, isValidDate, sharing });
 
 
 // ==============================

@@ -3,7 +3,8 @@
 // ----------------------------------------
 // shares.json — хто чиї задачі бачить:
 //   { id, ownerId, viewerId, status: "pending" | "active",
-//     permission: "view" | "mark", nickname, createdAt, acceptedAt }
+//     permission: "view" | "mark", nickname, createdAt, acceptedAt,
+//     scope: { tasks: true|false, wishlist: true|false } }  — що саме видно
 //
 // Як це працює:
 //   1. Глядач надсилає запит на пошту власника     POST /api/shares/request
@@ -36,6 +37,12 @@ function userColor(user) {
 
 const MARK_TYPES = ["helping", "done"];
 const PERMISSIONS = ["view", "mark"];
+
+// Старі доступи (до вішліста) — тільки задачі
+function scopeOf(share) {
+    const s = share.scope || {};
+    return { tasks: s.tasks !== false, wishlist: Boolean(s.wishlist) };
+}
 
 module.exports = function registerSharing(app, ctx) {
 
@@ -93,13 +100,13 @@ module.exports = function registerSharing(app, ctx) {
             myColor: userColor(req.user),
             // Люди, які хочуть бачити / бачать мої задачі
             asOwner: shares.filter(s => s.ownerId === me).map(s => ({
-                id: s.id, status: s.status, permission: s.permission,
+                id: s.id, status: s.status, permission: s.permission, scope: scopeOf(s),
                 nickname: s.nickname || "", createdAt: s.createdAt,
                 user: person(byId(s.viewerId))
             })),
             // Чиї задачі хочу бачити / бачу я
             asViewer: shares.filter(s => s.viewerId === me).map(s => ({
-                id: s.id, status: s.status, permission: s.permission, createdAt: s.createdAt,
+                id: s.id, status: s.status, permission: s.permission, scope: scopeOf(s), createdAt: s.createdAt,
                 user: person(byId(s.ownerId))
             }))
         });
@@ -147,6 +154,7 @@ module.exports = function registerSharing(app, ctx) {
             viewerId: req.user.id,
             status: "pending",
             permission: "view",
+            scope: { tasks: true, wishlist: true },
             nickname: "",
             createdAt: new Date().toISOString(),
             acceptedAt: null
@@ -185,6 +193,11 @@ module.exports = function registerSharing(app, ctx) {
             share.permission = body.permission;
         }
         if (body.nickname !== undefined) share.nickname = cleanNickname(body.nickname);
+        if (body.scope !== undefined) {
+            const scope = { tasks: Boolean(body.scope && body.scope.tasks), wishlist: Boolean(body.scope && body.scope.wishlist) };
+            if (!scope.tasks && !scope.wishlist) throw new Error("Выберите, что показывать: задачи и/или вишлист");
+            share.scope = scope;
+        }
     }
 
     app.post("/api/shares/:id/accept", auth, (req, res) => {
@@ -237,7 +250,7 @@ module.exports = function registerSharing(app, ctx) {
 
         const share = activeShare(req.params.ownerId, req.user.id);
 
-        if (!share) {
+        if (!share || !scopeOf(share).tasks) {
             return res.status(403).json({ error: "Нет доступа к этим задачам" });
         }
 
@@ -272,7 +285,7 @@ module.exports = function registerSharing(app, ctx) {
 
         const share = activeShare(req.params.ownerId, req.user.id);
 
-        if (!share || share.permission !== "mark") {
+        if (!share || share.permission !== "mark" || !scopeOf(share).tasks) {
             return res.status(403).json({ error: "Нет права ставить метки" });
         }
 
@@ -338,5 +351,11 @@ module.exports = function registerSharing(app, ctx) {
         res.json({ ok: true, marks: task.marks });
     });
 
-    return { userColor };
+    // Чи може глядач бачити частину ("tasks" | "wishlist") власника
+    function canView(ownerId, viewerId, part) {
+        const share = activeShare(ownerId, viewerId);
+        return share && scopeOf(share)[part] ? share : null;
+    }
+
+    return { userColor, canView, person };
 };

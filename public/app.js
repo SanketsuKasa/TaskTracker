@@ -144,6 +144,11 @@ const views = {
         subtitle: "Plan your deadlines month by month.",
         filter: "all"
     },
+    wishlist: {
+        title: "Вішліст",
+        subtitle: "Things you dream about — they never turn into tasks.",
+        filter: "all"
+    },
     shared: {
         title: "Shared",
         subtitle: "See tasks of people you love — and let them help with yours.",
@@ -324,6 +329,10 @@ function setView(view) {
     render();
 
     if (view === "settings") loadAnalytics();
+
+    // Кнопка в шапці: на вішлісті додає бажання
+    addButton.textContent = view === "wishlist" ? "+ Add wish" : "+ New Task";
+    if (view === "wishlist") renderWishlist();
 
     if (view === "shared") {
         bindSharedPage();
@@ -1502,7 +1511,10 @@ function closeTaskModal() {
     editingTask = null;
 }
 
-addButton.addEventListener("click", () => openTaskModal());
+addButton.addEventListener("click", () => {
+    if (currentView === "wishlist") openWishModal();
+    else openTaskModal();
+});
 
 closeModal.addEventListener("click", closeTaskModal);
 cancelModal.addEventListener("click", closeTaskModal);
@@ -2235,4 +2247,5 @@ if (token) {
     loadCategories();
     loadTasks();
     startSharesPolling();
+    loadWishlist();
 }

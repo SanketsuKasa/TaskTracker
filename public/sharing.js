@@ -10,6 +10,8 @@ let sharesData = { myColor: "", asOwner: [], asViewer: [] };
 let sharedOwnerId = null;     // чиї задачі зараз відкриті
 let sharedData = null;        // { owner, permission, categories, tasks }
 let sharedFilter = "all";
+let sharedPart = "tasks";     // "tasks" | "wishlist" — що дивимось у вибраної людини
+let sharedWishes = null;      // { ownerId, wishes }
 let sharesTimer = null;
 
 // [перший рядок, початок другого рядка] — ім'я додається в кінці
@@ -47,7 +49,10 @@ function startSharesPolling() {
     clearInterval(sharesTimer);
     sharesTimer = setInterval(() => {
         loadShares();
-        if (typeof currentView !== "undefined" && currentView === "shared" && sharedOwnerId) loadSharedTasks(sharedOwnerId, true);
+        if (typeof currentView !== "undefined" && currentView === "shared" && sharedOwnerId) {
+            if (sharedPart === "wishlist") loadSharedWishlist(sharedOwnerId, true);
+            else loadSharedTasks(sharedOwnerId, true);
+        }
     }, 60000);
 }
 
@@ -151,6 +156,28 @@ function personHtml(user, extra = "") {
         </div>`;
 }
 
+// Що показувати: задачі / вішліст (можна обидва)
+function scopeChecksHtml(scope) {
+    const sc = scope || { tasks: true, wishlist: true };
+    return `
+        <span class="share-scope">
+            <label><input type="checkbox" class="share-scope-tasks" ${sc.tasks ? "checked" : ""}> Tasks</label>
+            <label><input type="checkbox" class="share-scope-wishlist" ${sc.wishlist ? "checked" : ""}> Вішліст</label>
+        </span>`;
+}
+
+function readScope(row) {
+    return {
+        tasks: row.querySelector(".share-scope-tasks").checked,
+        wishlist: row.querySelector(".share-scope-wishlist").checked
+    };
+}
+
+function scopeText(scope) {
+    if (scope.tasks && scope.wishlist) return "tasks + вішліст";
+    return scope.tasks ? "tasks" : "вішліст";
+}
+
 function permissionSelectHtml(value) {
     return `
         <select class="share-permission">
@@ -177,8 +204,9 @@ function renderSharedView() {
     requestsCard.hidden = pending.length === 0;
     document.querySelector("#shareRequests").innerHTML = pending.map(s => `
         <div class="share-row" data-id="${escapeHtml(s.id)}">
-            ${personHtml(s.user, " · wants to see your tasks")}
+            ${personHtml(s.user, " · wants to see your tasks / вішліст")}
             <div class="share-controls">
+                ${scopeChecksHtml({ tasks: true, wishlist: true })}
                 ${permissionSelectHtml("view")}
                 <input type="text" class="share-nickname" maxlength="30" placeholder="Nickname on marks (optional)">
                 <button type="button" class="share-accept">Allow</button>
@@ -192,6 +220,7 @@ function renderSharedView() {
         <div class="share-row" data-id="${escapeHtml(s.id)}">
             ${personHtml(s.user)}
             <div class="share-controls">
+                ${scopeChecksHtml(s.scope)}
                 ${permissionSelectHtml(s.permission)}
                 <input type="text" class="share-nickname" maxlength="30" value="${escapeHtml(s.nickname)}" placeholder="Nickname on marks">
                 <button type="button" class="share-remove ghost">Remove access</button>
@@ -210,27 +239,71 @@ function renderSharedView() {
     }
 
     const active = owners.filter(s => s.status === "active");
-    if (!active.some(s => s.user.id === sharedOwnerId)) {
-        sharedOwnerId = active[0] ? active[0].user.id : null;
+    if (!active.some(s => String(s.user.id) === String(sharedOwnerId))) {
+        sharedOwnerId = active[0] ? String(active[0].user.id) : null;
         sharedData = null;
+        sharedWishes = null;
     }
 
+    // Що дозволено бачити в цієї людини
+    const current = active.find(s => String(s.user.id) === String(sharedOwnerId));
+    const scope = current ? current.scope : { tasks: false, wishlist: false };
+    if (!scope[sharedPart]) sharedPart = scope.tasks ? "tasks" : "wishlist";
+
     ownersBox.innerHTML = owners.map(s => `
-        <button type="button" class="owner-chip ${s.user.id === sharedOwnerId ? "active" : ""} ${s.status}"
+        <button type="button" class="owner-chip ${String(s.user.id) === String(sharedOwnerId) ? "active" : ""} ${s.status}"
                 data-owner="${escapeHtml(s.user.id)}" data-id="${escapeHtml(s.id)}" ${s.status !== "active" ? "disabled" : ""}
                 style="--mark:${escapeHtml(s.user.color)}">
             <span class="owner-dot"></span>
             ${escapeHtml(s.user.name)}
-            <small>${s.status === "active" ? (s.permission === "mark" ? "view + marks" : "view only") : "waiting for approval…"}</small>
+            <small>${s.status === "active" ? `${scopeText(s.scope)}${s.scope.tasks && s.permission === "mark" ? " · marks" : ""}` : "waiting for approval…"}</small>
         </button>`).join("");
 
-    document.querySelector("#sharedToolbar").hidden = !sharedOwnerId;
+    // Вкладки «Tasks / Вішліст»
+    const parts = document.querySelector("#sharedParts");
+    parts.hidden = !sharedOwnerId || !(scope.tasks && scope.wishlist);
+    parts.querySelectorAll("button").forEach(b => {
+        b.hidden = !scope[b.dataset.part];
+        b.classList.toggle("on", b.dataset.part === sharedPart);
+    });
 
-    if (sharedOwnerId && (!sharedData || sharedData.owner.id !== sharedOwnerId)) {
+    document.querySelector("#sharedToolbar").hidden = !sharedOwnerId;
+    document.querySelector("#sharedFilters").hidden = sharedPart !== "tasks";
+
+    if (!sharedOwnerId) return;
+
+    if (sharedPart === "wishlist") {
+        if (!sharedWishes || sharedWishes.ownerId !== sharedOwnerId) loadSharedWishlist(sharedOwnerId);
+        else renderSharedWishlist();
+    } else if (!sharedData || String(sharedData.owner.id) !== String(sharedOwnerId)) {
         loadSharedTasks(sharedOwnerId);
     } else {
         renderSharedTasks();
     }
+}
+
+async function loadSharedWishlist(ownerId, quiet = false) {
+
+    if (!quiet) document.querySelector("#sharedTasks").innerHTML = `<p class="share-empty">Loading…</p>`;
+
+    try {
+        const response = await api(`/api/shared/${encodeURIComponent(ownerId)}/wishlist`);
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error);
+        if (ownerId !== sharedOwnerId) return;
+        sharedWishes = { ownerId, wishes: result.wishes };
+        renderSharedWishlist();
+    } catch (error) {
+        document.querySelector("#sharedTasks").innerHTML = `<p class="share-empty">⚠️ ${escapeHtml(error.message)}</p>`;
+    }
+}
+
+function renderSharedWishlist() {
+    if (sharedPart !== "wishlist" || !sharedWishes) return;
+    const list = sortWishes(sharedWishes.wishes, "smart");
+    document.querySelector("#sharedTasks").innerHTML = list.length
+        ? `<div class="wish-grid">${list.map(w => wishCardHtml(w, false)).join("")}</div>`
+        : `<p class="share-empty">The wishlist is empty for now.</p>`;
 }
 
 async function loadSharedTasks(ownerId, quiet = false) {
@@ -252,7 +325,7 @@ async function loadSharedTasks(ownerId, quiet = false) {
 function renderSharedTasks() {
 
     const box = document.querySelector("#sharedTasks");
-    if (!sharedData) return;
+    if (!sharedData || sharedPart !== "tasks") return;
 
     const canMark = sharedData.permission === "mark";
     const order = { progress: 0, todo: 1, done: 2 };
@@ -388,6 +461,7 @@ function bindSharedPage() {
         try {
             if (row && event.target.closest(".share-accept")) {
                 await shareAction(`/api/shares/${row.dataset.id}/accept`, "POST", {
+                    scope: readScope(row),
                     permission: row.querySelector(".share-permission").value,
                     nickname: row.querySelector(".share-nickname").value
                 });
@@ -400,6 +474,10 @@ function bindSharedPage() {
             } else if (chip && !chip.disabled) {
                 sharedOwnerId = chip.dataset.owner;
                 sharedData = null;
+                sharedWishes = null;
+                renderSharedView();
+            } else if (event.target.closest("#sharedParts button")) {
+                sharedPart = event.target.closest("#sharedParts button").dataset.part;
                 renderSharedView();
             } else if (markButton) {
                 const card = markButton.closest(".shared-task");
@@ -417,9 +495,11 @@ function bindSharedPage() {
     section.addEventListener("change", async (event) => {
         const row = event.target.closest("#shareViewers .share-row");
         if (!row) return;
-        const body = event.target.classList.contains("share-permission")
+        const cls = event.target.classList;
+        const body = cls.contains("share-permission")
             ? { permission: event.target.value }
-            : event.target.classList.contains("share-nickname") ? { nickname: event.target.value } : null;
+            : cls.contains("share-nickname") ? { nickname: event.target.value }
+            : (cls.contains("share-scope-tasks") || cls.contains("share-scope-wishlist")) ? { scope: readScope(row) } : null;
         if (!body) return;
         try {
             await shareAction(`/api/shares/${row.dataset.id}`, "PATCH", body);
@@ -427,12 +507,13 @@ function bindSharedPage() {
             loadShares();
         } catch (error) {
             showToast(`⚠️ ${error.message}`);
+            loadShares();
         }
     });
 
     // Скасувати свій запит / відписатися — правий клік не потрібен: кнопка в чипі
     document.querySelector("#sharedLeave").addEventListener("click", async () => {
-        const share = sharesData.asViewer.find(s => s.user.id === sharedOwnerId);
+        const share = sharesData.asViewer.find(s => String(s.user.id) === String(sharedOwnerId));
         if (!share) return;
         try {
             await shareAction(`/api/shares/${share.id}`, "DELETE");
