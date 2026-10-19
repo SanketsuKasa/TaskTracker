@@ -66,6 +66,12 @@
                     Calendar
                 </a>
 
+                <a href="#" class="nav-item" data-view="shared">
+                    <span>⇄</span>
+                    Shared
+                    <em class="nav-count nav-alert" id="navShared" hidden>0</em>
+                </a>
+
                 <a href="#" class="nav-item" data-view="profile">
                     <span>☺</span>
                     Profile
@@ -735,6 +741,72 @@
 
             </section>
 
+
+            <!-- ======================================== -->
+            <!-- СПІЛЬНИЙ ДОСТУП -->
+            <!-- ======================================== -->
+
+            <section class="shared" id="shared">
+
+                <!-- Запити до мене -->
+                <div class="profile-card share-requests" id="shareRequestsCard" hidden>
+                    <h3>💌 Requests to see your tasks</h3>
+                    <p class="share-hint">Choose what this person can do: only look at your tasks, or also put marks on them (“в процесі допомоги” / “завершено”).</p>
+                    <div id="shareRequests"></div>
+                </div>
+
+                <!-- Чужі задачі -->
+                <div class="profile-card">
+                    <div class="shared-head">
+                        <div>
+                            <h3>Tasks shared with you</h3>
+                            <p class="share-hint">Pick a person to see their tasks.</p>
+                        </div>
+                    </div>
+                    <div class="owner-chips" id="sharedOwners"></div>
+                    <div class="shared-toolbar" id="sharedToolbar" hidden>
+                        <div class="filters" id="sharedFilters">
+                            <button type="button" class="sfilter active" data-filter="all">All</button>
+                            <button type="button" class="sfilter" data-filter="todo">Todo</button>
+                            <button type="button" class="sfilter" data-filter="progress">In Progress</button>
+                            <button type="button" class="sfilter" data-filter="done">Done</button>
+                        </div>
+                        <button type="button" class="link-button" id="sharedLeave">Stop viewing</button>
+                    </div>
+                    <div class="task-list shared-list" id="sharedTasks"></div>
+                </div>
+
+                <div class="shared-grid">
+
+                    <!-- Попросити доступ -->
+                    <div class="profile-card">
+                        <h3>Ask for access</h3>
+                        <p class="share-hint">Enter the email someone registered with. They will get a request and decide what you can do.</p>
+                        <form class="share-form" id="shareRequestForm">
+                            <input type="email" id="shareEmail" placeholder="their@email.com" autocomplete="off" required>
+                            <button type="submit">Send request</button>
+                        </form>
+                        <label class="share-color">
+                            <span class="share-color-dot" id="myShareColorDot"></span>
+                            <span>
+                                <strong>Your color</strong>
+                                <small>The strip on tasks you mark</small>
+                            </span>
+                            <input type="color" id="myShareColor" value="#b69cff">
+                        </label>
+                    </div>
+
+                    <!-- Хто бачить мої задачі -->
+                    <div class="profile-card">
+                        <h3>Who sees your tasks</h3>
+                        <p class="share-hint">Nickname is how their marks are signed on your tasks — e.g. “коханий”.</p>
+                        <div id="shareViewers"></div>
+                    </div>
+
+                </div>
+
+            </section>
+
         </main>
 
     </div>
@@ -1083,6 +1155,7 @@
     <script src="productivity.js"></script>
     <script src="analytics.js"></script>
     <script src="appearance.js"></script>
+    <script src="sharing.js"></script>
     <script src="app.js"></script>
 
 </body>

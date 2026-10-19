@@ -144,6 +144,11 @@ const views = {
         subtitle: "Plan your deadlines month by month.",
         filter: "all"
     },
+    shared: {
+        title: "Shared",
+        subtitle: "See tasks of people you love — and let them help with yours.",
+        filter: "all"
+    },
     profile: {
         title: "Profile",
         subtitle: "Your photo, stats and progress.",
@@ -319,6 +324,12 @@ function setView(view) {
     render();
 
     if (view === "settings") loadAnalytics();
+
+    if (view === "shared") {
+        bindSharedPage();
+        renderSharedView();
+        loadShares();
+    }
 }
 
 // ---------- Вкладки настроек ----------
@@ -488,7 +499,13 @@ function createTaskCard(task) {
         card.classList.add("working-task");
     }
 
+    if ((task.marks || []).length) {
+        card.classList.add("has-marks");
+        card.style.setProperty("--strips", task.marks.length);
+    }
+
     card.innerHTML = `
+        ${marksStripHtml(task, "owner")}
 
         <div class="task-check ${isDone ? "checked" : ""}" title="Change status">
             ✓
@@ -536,6 +553,9 @@ function createTaskCard(task) {
 
     // Кнопки «Почати / Призупинити / ...» (только в режиме анализа)
     bindProductivityRow(card, task);
+
+    // «×» на смужках-мітках помічників
+    bindMarkStrips(card, task);
 
     // Клик по квадратику: Todo → In Progress → Done → Todo
     card.querySelector(".task-check")
@@ -2214,4 +2234,5 @@ if (token) {
     loadUser();
     loadCategories();
     loadTasks();
+    startSharesPolling();
 }

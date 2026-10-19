@@ -102,7 +102,42 @@ async function sendCode(user, code, purpose) {
     return { delivered: true };
 }
 
+// Просте повідомлення (наприклад: «X хоче бачити ваші задачі»)
+async function sendNotice(user, subject, text) {
+
+    if (!transporter) {
+        console.log("\n==========================================");
+        console.log(`✉️  ${user.email}: ${subject}`);
+        console.log(`    ${text}`);
+        console.log("==========================================\n");
+        return { delivered: false };
+    }
+
+    const safe = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+    await transporter.sendMail({
+        from: fromAddress,
+        to: user.email,
+        subject,
+        text,
+        html: `
+<div style="background:#0d0f14;padding:32px 16px;font-family:Arial,Helvetica,sans-serif">
+  <div style="max-width:440px;margin:0 auto;background:#151820;border:1px solid #292e39;border-radius:16px;padding:32px;color:#ffffff">
+    <div style="font-size:18px;font-weight:700;margin-bottom:24px">
+      <span style="display:inline-block;width:32px;height:32px;line-height:32px;text-align:center;background:#7c5cff;border-radius:8px;margin-right:8px">✓</span>
+      Task Tracker
+    </div>
+    <p style="color:#d5d8df;font-size:15px;margin:0 0 8px">Hi ${safe(user.name)},</p>
+    <p style="color:#9aa0ae;font-size:14px;margin:0">${safe(text)}</p>
+  </div>
+</div>`
+    });
+
+    return { delivered: true };
+}
+
 module.exports = {
     initMailer,
-    sendCode
+    sendCode,
+    sendNotice
 };

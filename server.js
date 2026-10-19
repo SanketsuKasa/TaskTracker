@@ -2,10 +2,12 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const crypto = require("crypto");
-const { initMailer, sendCode } = require("./mailer");
+const { initMailer, sendCode, sendNotice } = require("./mailer");
+const registerSharing = require("./sharing");
 const worklog = require("./worklog");
 
 const app = express();
+let sharing = null;   // заполняется ниже (спільний доступ)
 const PORT = 3000;
 
 const tasksFile = path.join(__dirname, "tasks.json");
@@ -96,6 +98,7 @@ function publicUser(user) {
         name: user.name,
         email: user.email,
         avatar: user.avatar || "",
+        color: sharing ? sharing.userColor(user) : "",
         emailVerified: user.emailVerified !== false,
         createdAt: user.createdAt,
         settings: {
@@ -1278,6 +1281,15 @@ app.get("/api/tasks/:id/history", (req, res) => {
         sessions: worklog.readSessions().filter(s => s.taskId === id),
         events: worklog.getEvents(req.user.id, id)
     });
+});
+
+
+// ==============================
+// СПІЛЬНИЙ ДОСТУП (sharing.js)
+// ==============================
+
+sharing = registerSharing(app, {
+    readJson, writeJson, usersFile, tasksFile, auth, worklog, isValidEmail, sendNotice
 });
 
 

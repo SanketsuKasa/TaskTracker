@@ -300,7 +300,8 @@ nav {
     gap: 6px;
 }
 
-.filter {
+.filter,
+.sfilter {
     background: transparent;
 
     border: 1px solid var(--border-strong);
@@ -314,11 +315,13 @@ nav {
     cursor: pointer;
 }
 
-.filter:hover {
+.filter:hover,
+.sfilter:hover {
     color: var(--text);
 }
 
-.filter.active {
+.filter.active,
+.sfilter.active {
     background: var(--accent-bg);
     border-color: var(--accent-border);
     color: var(--accent-light);
@@ -4488,5 +4491,371 @@ input[type="range"] {
     .photo-pick {
         flex-direction: column;
         align-items: flex-start;
+    }
+}
+
+
+/* ========================================
+   СПІЛЬНИЙ ДОСТУП: сторінка «Shared» і смужки-мітки
+======================================== */
+
+.shared {
+    display: none;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.main[data-view="shared"] .shared {
+    display: flex;
+}
+
+.main[data-view="shared"] .stats,
+.main[data-view="shared"] .content-grid,
+.main[data-view="shared"] .add-button {
+    display: none;
+}
+
+.nav-count.nav-alert {
+    background: var(--accent);
+    color: #fff;
+}
+
+.nav-count[hidden] {
+    display: none;
+}
+
+.shared h3 {
+    margin: 0 0 4px;
+    font-size: 16px;
+}
+
+.share-hint {
+    margin: 0 0 16px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.share-empty {
+    color: var(--text-faint);
+    font-size: 13px;
+    margin: 6px 0;
+}
+
+.shared-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.share-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 0;
+    border-top: 1px solid var(--border);
+}
+
+.share-row:first-child {
+    border-top: none;
+}
+
+.share-person {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.share-avatar {
+    flex: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    font-weight: 700;
+    color: var(--bg);
+    background: var(--mark);
+    box-shadow: 0 0 0 2px var(--surface), 0 0 10px var(--mark);
+}
+
+.share-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.share-who {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.share-who small {
+    color: var(--text-muted);
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.share-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.share-controls select,
+.share-controls input,
+.share-form input {
+    background: var(--bg-deep);
+    border: 1px solid var(--border-strong);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font: inherit;
+    font-size: 13px;
+}
+
+.share-controls input {
+    width: 190px;
+}
+
+.share-controls button,
+.share-form button,
+.mark-btn {
+    border: 1px solid var(--accent-border);
+    background: var(--accent-bg);
+    color: var(--accent-light);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.share-controls button.ghost,
+.mark-btn.ghost {
+    background: transparent;
+    border-color: var(--border-strong);
+    color: var(--text-muted);
+}
+
+.share-form {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+.share-form input {
+    flex: 1;
+    min-width: 0;
+}
+
+.share-color {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.share-color span:nth-child(2) {
+    display: flex;
+    flex-direction: column;
+}
+
+.share-color small {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.share-color-dot {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--mark, #b69cff);
+    box-shadow: 0 0 12px var(--mark, #b69cff);
+}
+
+.share-color input {
+    margin-left: auto;
+    width: 38px;
+    height: 30px;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.owner-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.owner-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 30px;
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    color: var(--text-2);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.owner-chip small {
+    color: var(--text-faint);
+    font-size: 11px;
+}
+
+.owner-chip.active {
+    border-color: var(--mark);
+    color: var(--text);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--mark) 35%, transparent);
+}
+
+.owner-chip.pending {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.owner-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--mark);
+    box-shadow: 0 0 8px var(--mark);
+}
+
+.shared-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.shared-toolbar[hidden] {
+    display: none;
+}
+
+.shared-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.shared-tag {
+    background: var(--surface-3);
+    color: var(--text-2);
+}
+
+.shared-task .task-check {
+    cursor: default;
+}
+
+.shared-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.mark-btn.done {
+    border-color: rgba(81, 212, 138, 0.45);
+    background: rgba(81, 212, 138, 0.12);
+    color: #7de8ab;
+}
+
+
+/* ---------- Смужки-мітки зліва на картці ---------- */
+
+.task-card.has-marks {
+    position: relative;
+    overflow: hidden;
+}
+
+.mark-strips {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    display: flex;
+}
+
+.task-card.has-marks {
+    padding-left: calc(18px + var(--strips, 1) * 22px);
+}
+
+.mark-strip {
+    position: relative;
+    width: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--mark) 22%, transparent);
+    border-right: 1px solid color-mix(in srgb, var(--mark) 55%, transparent);
+    box-shadow: inset 2px 0 0 var(--mark), 0 0 14px color-mix(in srgb, var(--mark) 25%, transparent);
+}
+
+.mark-strip.done {
+    background: color-mix(in srgb, var(--mark) 45%, transparent);
+}
+
+.mark-strip span {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    max-height: calc(100% - 10px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    color: color-mix(in srgb, var(--mark) 70%, #ffffff);
+    text-shadow: 0 0 6px color-mix(in srgb, var(--mark) 60%, transparent);
+}
+
+.mark-remove {
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+    line-height: 18px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.mark-strip:hover .mark-remove,
+.mark-remove:focus-visible {
+    opacity: 1;
+}
+
+@media (max-width: 900px) {
+    .shared-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .share-controls input {
+        width: 100%;
     }
 }
