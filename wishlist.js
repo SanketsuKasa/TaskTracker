@@ -167,7 +167,7 @@ module.exports = function registerWishlist(app, ctx) {
         const share = sharing.canView(req.params.ownerId, req.user.id, "wishlist");
 
         if (!share) {
-            return res.status(403).json({ error: "Нет доступа к этому вишлисту" });
+            return res.status(403).json({ error: "Нет доступа к этому wishlist" });
         }
 
         const owner = readJson(usersFile).find(u => u.id === share.ownerId);

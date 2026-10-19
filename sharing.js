@@ -195,7 +195,7 @@ module.exports = function registerSharing(app, ctx) {
         if (body.nickname !== undefined) share.nickname = cleanNickname(body.nickname);
         if (body.scope !== undefined) {
             const scope = { tasks: Boolean(body.scope && body.scope.tasks), wishlist: Boolean(body.scope && body.scope.wishlist) };
-            if (!scope.tasks && !scope.wishlist) throw new Error("Выберите, что показывать: задачи и/или вишлист");
+            if (!scope.tasks && !scope.wishlist) throw new Error("Выберите, что показывать: задачи и/или wishlist");
             share.scope = scope;
         }
     }

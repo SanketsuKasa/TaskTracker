@@ -145,7 +145,7 @@ const views = {
         filter: "all"
     },
     wishlist: {
-        title: "Вішліст",
+        title: "Wishlist",
         subtitle: "Things you dream about — they never turn into tasks.",
         filter: "all"
     },

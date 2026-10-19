@@ -162,7 +162,7 @@ function scopeChecksHtml(scope) {
     return `
         <span class="share-scope">
             <label><input type="checkbox" class="share-scope-tasks" ${sc.tasks ? "checked" : ""}> Tasks</label>
-            <label><input type="checkbox" class="share-scope-wishlist" ${sc.wishlist ? "checked" : ""}> Вішліст</label>
+            <label><input type="checkbox" class="share-scope-wishlist" ${sc.wishlist ? "checked" : ""}> Wishlist</label>
         </span>`;
 }
 
@@ -174,8 +174,8 @@ function readScope(row) {
 }
 
 function scopeText(scope) {
-    if (scope.tasks && scope.wishlist) return "tasks + вішліст";
-    return scope.tasks ? "tasks" : "вішліст";
+    if (scope.tasks && scope.wishlist) return "tasks + wishlist";
+    return scope.tasks ? "tasks" : "wishlist";
 }
 
 function permissionSelectHtml(value) {
@@ -204,7 +204,7 @@ function renderSharedView() {
     requestsCard.hidden = pending.length === 0;
     document.querySelector("#shareRequests").innerHTML = pending.map(s => `
         <div class="share-row" data-id="${escapeHtml(s.id)}">
-            ${personHtml(s.user, " · wants to see your tasks / вішліст")}
+            ${personHtml(s.user, " · wants to see your tasks / wishlist")}
             <div class="share-controls">
                 ${scopeChecksHtml({ tasks: true, wishlist: true })}
                 ${permissionSelectHtml("view")}
