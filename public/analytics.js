@@ -149,7 +149,8 @@ window.addEventListener("resize", () => {
 function chartCategories() {
 
     const names = categories.map(c => c.name);
-    const list = names.slice(0, CHART_COLORS.length).map((name, i) => ({ name, color: CHART_COLORS[i] }));
+    const palette = typeof getChartColors === "function" ? getChartColors() : CHART_COLORS;
+    const list = names.slice(0, palette.length).map((name, i) => ({ name, color: palette[i] }));
 
     return {
         list,
@@ -535,7 +536,7 @@ function renderTrendChart(source) {
             ? bucketed.buckets.map(b => ({ ...b, values: { [TOTAL_KEY]: b.total } }))
             : bucketed.buckets,
         cats: isTotal
-            ? { colorOf: () => TOTAL_COLOR }
+            ? { colorOf: () => (typeof themeAccent === "function" ? themeAccent() : TOTAL_COLOR) }
             : source.cats
     };
 
@@ -679,7 +680,7 @@ function renderTrendChart(source) {
 
     // Легенда-переключатель (для одной линии «Total» — просто подпись с итогом)
     if (isTotal) {
-        legend.innerHTML = `<span><i style="background:${TOTAL_COLOR}"></i>All categories <b>${formatMinutes(bucketed.totalSeconds / 60)}</b></span>`;
+        legend.innerHTML = `<span><i style="background:${data.cats.colorOf()}"></i>All categories <b>${formatMinutes(bucketed.totalSeconds / 60)}</b></span>`;
         return;
     }
 

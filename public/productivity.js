@@ -46,6 +46,12 @@ function applyProductivityMode(on) {
 
     // Если открыта страница с графиками — сразу показываем их
     if (productivityOn && typeof loadAnalytics === "function") loadAnalytics();
+
+    // Неоновый график на фоне работает только вместе с анализом
+    if (typeof updateGlow === "function") {
+        updateGlow();
+        if (appearanceLoaded) fillAppearanceForm();
+    }
 }
 
 productivityToggle.addEventListener("change", async () => {
@@ -325,6 +331,9 @@ async function workAction(task, action, extra = {}) {
 
         Object.assign(task, updated);
         render();
+
+        // Обновить неоновый график на фоне
+        if (typeof refreshGlowData === "function") refreshGlowData();
 
         if (action === "finish") {
             celebrate(task);

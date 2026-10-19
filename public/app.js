@@ -944,6 +944,9 @@ async function loadCategories() {
 
     renderCategoryFilter();
     renderCategoryManager();
+
+    // Подписи цветов графиков = названия категорий
+    if (appearanceLoaded) fillAppearanceForm();
 }
 
 // Сохранить весь список на сервере. Возвращает true, если получилось
@@ -1655,6 +1658,9 @@ async function loadUser() {
         const response = await api("/api/me");
         const user = await response.json();
         saveUser(user);
+
+        // Оформление берём только из свежего ответа сервера
+        loadAppearanceFromUser(user);
     } catch (error) {
         console.error(error);
     }

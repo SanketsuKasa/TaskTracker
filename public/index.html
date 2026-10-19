@@ -8,9 +8,23 @@
     <title>Task Tracker</title>
 
     <link rel="stylesheet" href="style.css">
+
+    <!-- Сохранённая тема — применяем сразу, до отрисовки -->
+    <script src="theme.js"></script>
 </head>
 
 <body>
+
+    <!-- Фон: цвет/фото, затемнение, неоновый график, шармики -->
+    <div class="bg-layer" aria-hidden="true">
+        <div class="bg-base" id="bgBase"></div>
+        <div class="bg-dim" id="bgDim"></div>
+        <svg class="bg-glow" id="bgGlow" preserveAspectRatio="none" style="display:none"></svg>
+        <div class="charm-layer" id="charmLayer" style="display:none"></div>
+    </div>
+
+    <!-- Увеличенный шармик -->
+    <div class="charm-zoom" id="charmZoom"></div>
 
     <div class="app">
 
@@ -445,12 +459,144 @@
 
                 <!-- ---------- Внешний вид ---------- -->
                 <div class="settings-panel" data-panel="appearance">
-                    <div class="profile-card coming-soon">
-                        <div class="coming-icon">🎨</div>
-                        <h3>Appearance</h3>
-                        <p>Themes, accent colors and layout options will live here.</p>
-                        <span class="soon-badge">Coming soon</span>
+
+                    <div class="appearance-status" id="appearanceStatus" aria-live="polite"></div>
+
+                    <!-- Готовые темы -->
+                    <div class="profile-card">
+                        <h3>Theme</h3>
+                        <p class="card-hint">Pick a ready-made mood or fine-tune every color below.</p>
+                        <div class="theme-presets" id="themePresets"></div>
                     </div>
+
+                    <!-- Свои цвета -->
+                    <div class="profile-card">
+                        <div class="card-title-row">
+                            <h3>Colors</h3>
+                            <button type="button" class="link-button" id="resetColors">Reset to default</button>
+                        </div>
+                        <div class="color-grid" id="colorFields"></div>
+
+                        <div class="range-row">
+                            <label for="panelOpacity">Panel transparency <small>lower — see more of the background</small></label>
+                            <input type="range" id="panelOpacity" min="0.35" max="1" step="0.05">
+                            <span id="panelOpacityValue">100%</span>
+                        </div>
+                    </div>
+
+                    <!-- Цвета графиков -->
+                    <div class="profile-card">
+                        <div class="card-title-row">
+                            <h3>Chart colors</h3>
+                            <button type="button" class="link-button" id="resetChartColors">Reset to safe palette</button>
+                        </div>
+                        <p class="card-hint">One color per category in productivity charts. The default palette stays readable for color-blind people too.</p>
+                        <div class="color-grid" id="chartColorFields"></div>
+                    </div>
+
+                    <!-- Фон -->
+                    <div class="profile-card">
+                        <h3>Background</h3>
+
+                        <div class="segmented bg-type" id="bgTypeSegment">
+                            <button type="button" data-value="color">🎨 Color</button>
+                            <button type="button" data-value="photo">🖼 Photo</button>
+                        </div>
+
+                        <div id="bgColorBlock" class="bg-block">
+                            <div class="color-grid">
+                                <label class="color-field">
+                                    <input type="color" id="bgColor1">
+                                    <span>Color<small>main</small></span>
+                                </label>
+                                <label class="color-field" id="bgColor2Field">
+                                    <input type="color" id="bgColor2">
+                                    <span>Second color<small>gradient</small></span>
+                                </label>
+                            </div>
+                            <label class="check-row"><input type="checkbox" id="bgGradient"> Soft gradient</label>
+                            <div class="range-row" id="bgAngleRow">
+                                <label for="bgAngle">Gradient direction</label>
+                                <input type="range" id="bgAngle" min="0" max="360" step="5">
+                            </div>
+                            <button type="button" class="link-button" id="bgUseTheme">Use the theme background</button>
+                        </div>
+
+                        <div id="bgPhotoBlock" class="bg-block">
+                            <div class="photo-pick">
+                                <div class="bg-photo-preview empty" id="bgPhotoPreview"></div>
+                                <div>
+                                    <button type="button" class="create-button" id="bgPhotoButton">Upload photo</button>
+                                    <button type="button" class="cancel-button" id="bgPhotoRemove">Remove</button>
+                                    <input type="file" id="bgPhotoInput" accept="image/jpeg,image/png,image/webp" hidden>
+                                    <small class="photo-hint">Large photos are resized automatically.</small>
+                                </div>
+                            </div>
+                            <div class="range-row">
+                                <label for="bgDimRange">Darken <small>keeps text readable</small></label>
+                                <input type="range" id="bgDimRange" min="0" max="0.85" step="0.05">
+                            </div>
+                            <div class="range-row">
+                                <label for="bgBlurRange">Blur</label>
+                                <input type="range" id="bgBlurRange" min="0" max="20" step="1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Шармики -->
+                    <div class="profile-card">
+                        <label class="switch-row">
+                            <span>
+                                <strong>✨ Floating charms</strong>
+                                <small>Tiny neon figures with little motivational phrases. They drift away from your cursor; double-click one on the background to read it.</small>
+                            </span>
+                            <input type="checkbox" id="charmsToggle">
+                            <span class="switch" aria-hidden="true"></span>
+                        </label>
+
+                        <div class="charms-body" id="charmsBody">
+
+                            <div class="range-row">
+                                <label for="charmSize">Size</label>
+                                <input type="range" id="charmSize" min="0.6" max="1.8" step="0.05">
+                            </div>
+
+                            <label class="small-label">Figure</label>
+                            <div class="shape-picker" id="charmShapePicker"></div>
+
+                            <label class="small-label" for="charmPhrase">Phrase</label>
+                            <div class="inline-add visible">
+                                <input type="text" id="charmPhrase" maxlength="80" placeholder="Your phrase — or leave empty for a random one">
+                                <button type="button" class="dice" id="charmRandomPhrase" title="Random phrase">🎲</button>
+                                <button type="button" id="charmAdd">Add charm</button>
+                            </div>
+
+                            <div class="charm-actions">
+                                <span id="charmCount"></span>
+                                <button type="button" class="link-button" id="charmAddRandom">+ 5 random</button>
+                                <button type="button" class="link-button" id="charmShuffle">Shuffle positions</button>
+                            </div>
+
+                            <div class="charm-list" id="charmList"></div>
+                        </div>
+                    </div>
+
+                    <!-- Неоновый график -->
+                    <div class="profile-card">
+                        <label class="switch-row">
+                            <span>
+                                <strong>〰 Productivity glow</strong>
+                                <small id="glowHint"></small>
+                            </span>
+                            <input type="checkbox" id="glowToggle">
+                            <span class="switch" aria-hidden="true"></span>
+                        </label>
+                        <div class="range-row">
+                            <label for="glowIntensity">Brightness</label>
+                            <input type="range" id="glowIntensity" min="0.15" max="1" step="0.05">
+                        </div>
+                    </div>
+
                 </div>
 
 
@@ -929,6 +1075,7 @@
     <!-- JavaScript -->
     <script src="productivity.js"></script>
     <script src="analytics.js"></script>
+    <script src="appearance.js"></script>
     <script src="app.js"></script>
 
 </body>

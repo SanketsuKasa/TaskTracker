@@ -19,8 +19,12 @@ const SESSION_DAYS = 30;
 const avatarsDir = path.join(__dirname, "uploads", "avatars");
 fs.mkdirSync(avatarsDir, { recursive: true });
 
+// Папка для фото фона
+const backgroundsDir = path.join(__dirname, "uploads", "backgrounds");
+fs.mkdirSync(backgroundsDir, { recursive: true });
+
 // Разрешаем JSON-запросы (до 5 МБ — для фото)
-app.use(express.json({ limit: "5mb" }));
+app.use(express.json({ limit: "9mb" }));
 
 // Подключаем сайт и загруженные фото
 app.use(express.static(path.join(__dirname, "public")));
@@ -96,7 +100,8 @@ function publicUser(user) {
         createdAt: user.createdAt,
         settings: {
             productivityEnabled: Boolean(user.settings && user.settings.productivityEnabled)
-        }
+        },
+        appearance: user.appearance || null
     };
 }
 
@@ -664,6 +669,97 @@ app.patch("/api/settings", auth, (req, res) => {
         user.settings.productivityEnabled = Boolean(req.body.productivityEnabled);
     }
 
+    writeJson(usersFile, users);
+
+    res.json(publicUser(user));
+});
+
+
+// ==============================
+// ВНЕШНИЙ ВИД: цвета, фон, «шармики»
+// ==============================
+
+app.put("/api/appearance", auth, (req, res) => {
+
+    const appearance = req.body.appearance;
+
+    if (!appearance || typeof appearance !== "object" || Array.isArray(appearance)) {
+        return res.status(400).json({ error: "Неверные настройки вида" });
+    }
+
+    if (JSON.stringify(appearance).length > 60000) {
+        return res.status(400).json({ error: "Слишком большие настройки (много шармиков?)" });
+    }
+
+    const users = readJson(usersFile);
+    const user = users.find(u => u.id === req.user.id);
+
+    // Фото фона меняется только через загрузку — не даём подставить чужой путь
+    const photo = user.appearance && user.appearance.background && user.appearance.background.photo;
+    appearance.background = { ...(appearance.background || {}), photo: photo || "" };
+
+    user.appearance = appearance;
+    writeJson(usersFile, users);
+
+    res.json(publicUser(user));
+});
+
+function removeBackgroundFile(user) {
+    const photo = user.appearance && user.appearance.background && user.appearance.background.photo;
+    if (!photo) return;
+    const file = path.join(backgroundsDir, path.basename(photo));
+    if (fs.existsSync(file)) fs.unlinkSync(file);
+}
+
+app.put("/api/appearance/photo", auth, (req, res) => {
+
+    try {
+
+        const match = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/
+            .exec(String(req.body.image || ""));
+
+        if (!match) {
+            return res.status(400).json({ error: "Нужна картинка JPG, PNG или WEBP" });
+        }
+
+        const buffer = Buffer.from(match[2], "base64");
+
+        if (buffer.length > 6 * 1024 * 1024) {
+            return res.status(400).json({ error: "Картинка больше 6 МБ" });
+        }
+
+        const users = readJson(usersFile);
+        const user = users.find(u => u.id === req.user.id);
+
+        removeBackgroundFile(user);
+
+        const extension = match[1] === "jpeg" ? "jpg" : match[1];
+        const fileName = `${user.id}-${Date.now()}.${extension}`;
+        fs.writeFileSync(path.join(backgroundsDir, fileName), buffer);
+
+        user.appearance = user.appearance || {};
+        user.appearance.background = { ...(user.appearance.background || {}), photo: `/uploads/backgrounds/${fileName}`, type: "photo" };
+        writeJson(usersFile, users);
+
+        res.json(publicUser(user));
+
+    } catch (error) {
+
+        console.error(error);
+        res.status(500).json({ error: "Не удалось сохранить фото" });
+
+    }
+});
+
+app.delete("/api/appearance/photo", auth, (req, res) => {
+
+    const users = readJson(usersFile);
+    const user = users.find(u => u.id === req.user.id);
+
+    removeBackgroundFile(user);
+
+    user.appearance = user.appearance || {};
+    user.appearance.background = { ...(user.appearance.background || {}), photo: "", type: "color" };
     writeJson(usersFile, users);
 
     res.json(publicUser(user));
