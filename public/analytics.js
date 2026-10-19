@@ -49,12 +49,12 @@ async function loadAnalytics() {
     renderAnalytics();
 }
 
-function periodRange() {
+function periodRange(mode = analyticsState.mode, anchor = analyticsState.anchor) {
 
-    const a = analyticsState.anchor;
+    const a = anchor;
     let start, end, buckets;
 
-    if (analyticsState.mode === "day") {
+    if (mode === "day") {
         start = new Date(a.getFullYear(), a.getMonth(), a.getDate());
         end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1);
         buckets = Array.from({ length: 24 }, (_, h) => ({
@@ -63,7 +63,7 @@ function periodRange() {
             label: String(h),
             title: `${String(h).padStart(2, "0")}:00–${String(h + 1).padStart(2, "0")}:00`
         }));
-    } else if (analyticsState.mode === "week") {
+    } else if (mode === "week") {
         const offset = (a.getDay() + 6) % 7;
         start = new Date(a.getFullYear(), a.getMonth(), a.getDate() - offset);
         end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7);
@@ -94,13 +94,13 @@ function periodRange() {
     return { start, end, buckets };
 }
 
-function periodTitle(range) {
+function periodTitle(range, mode = analyticsState.mode) {
 
-    if (analyticsState.mode === "day") {
+    if (mode === "day") {
         return range.start.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
     }
 
-    if (analyticsState.mode === "week") {
+    if (mode === "week") {
         const last = new Date(range.end - 86400000);
         const f = d => d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
         return `${f(range.start)} – ${f(last)}`;
@@ -109,18 +109,14 @@ function periodTitle(range) {
     return range.start.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 }
 
+function shiftedAnchor(mode, a, direction) {
+    if (mode === "day") return new Date(a.getFullYear(), a.getMonth(), a.getDate() + direction);
+    if (mode === "week") return new Date(a.getFullYear(), a.getMonth(), a.getDate() + 7 * direction);
+    return new Date(a.getFullYear(), a.getMonth() + direction, 1);
+}
+
 function shiftPeriod(direction) {
-
-    const a = analyticsState.anchor;
-
-    if (analyticsState.mode === "day") {
-        analyticsState.anchor = new Date(a.getFullYear(), a.getMonth(), a.getDate() + direction);
-    } else if (analyticsState.mode === "week") {
-        analyticsState.anchor = new Date(a.getFullYear(), a.getMonth(), a.getDate() + 7 * direction);
-    } else {
-        analyticsState.anchor = new Date(a.getFullYear(), a.getMonth() + direction, 1);
-    }
-
+    analyticsState.anchor = shiftedAnchor(analyticsState.mode, analyticsState.anchor, direction);
     renderAnalytics();
 }
 
@@ -178,6 +174,26 @@ function overlapSeconds(aStart, aEnd, bStart, bEnd) {
     return Math.max(0, (end - start) / 1000);
 }
 
+// Разложить активное время сессий по столбикам периода и категориям
+function bucketize(range, sessions, cats) {
+
+    const keys = [...cats.list.map(c => c.name), "Other"];
+
+    const buckets = range.buckets.map(bucket => {
+        const values = Object.fromEntries(keys.map(k => [k, 0]));
+        sessions.forEach(s => {
+            const sec = overlapSeconds(s.start, s.end, bucket.start, bucket.end);
+            if (sec) values[cats.keyOf(s.task ? s.task.category || "Development" : "Other")] += sec;
+        });
+        return { ...bucket, values, total: Object.values(values).reduce((a, b) => a + b, 0) };
+    });
+
+    const usedKeys = keys.filter(k => buckets.some(b => b.values[k] > 0));
+    const totalSeconds = buckets.reduce((sum, b) => sum + b.total, 0);
+
+    return { buckets, usedKeys, totalSeconds };
+}
+
 function collectAnalytics() {
 
     const range = periodRange();
@@ -193,19 +209,7 @@ function collectAnalytics() {
         .sort((a, b) => a.start - b.start);
 
     // ---------- Активное время по категориям в каждом столбике ----------
-    const keys = [...cats.list.map(c => c.name), "Other"];
-
-    const buckets = range.buckets.map(bucket => {
-        const values = Object.fromEntries(keys.map(k => [k, 0]));
-        inRange.forEach(s => {
-            const sec = overlapSeconds(s.start, s.end, bucket.start, bucket.end);
-            if (sec) values[cats.keyOf(s.task ? s.task.category || "Development" : "Other")] += sec;
-        });
-        return { ...bucket, values, total: Object.values(values).reduce((a, b) => a + b, 0) };
-    });
-
-    const usedKeys = keys.filter(k => buckets.some(b => b.values[k] > 0));
-    const totalSeconds = buckets.reduce((sum, b) => sum + b.total, 0);
+    const { buckets, usedKeys, totalSeconds } = bucketize(range, inRange, cats);
 
     // ---------- Задачи периода ----------
     const inPeriod = d => d && new Date(d) >= range.start && new Date(d) < range.end;
@@ -237,6 +241,7 @@ function renderAnalytics() {
 
     renderTiles(data);
     renderActivityChart(data);
+    lastAnalyticsData = data;
     renderTrendChart(data);
     renderWorkStyle(data);
     renderBalance(data);
@@ -411,6 +416,52 @@ function renderActivityChart(data) {
 
 const hiddenTrendSeries = new Set();
 
+// У графика тренда свои настройки — независимо от остальных графиков
+const trendState = {
+    mode: "week",           // day | week | month
+    anchor: new Date(),
+    split: "category"       // category | total
+};
+
+const TOTAL_KEY = "Total";
+const TOTAL_COLOR = "#a98cff";
+
+function setupTrendControls() {
+
+    document.querySelectorAll("#trendPeriod button").forEach(button => {
+        button.addEventListener("click", () => {
+            trendState.mode = button.dataset.value;
+            renderTrendChart(lastAnalyticsData);
+        });
+    });
+
+    document.querySelectorAll("#trendSplit button").forEach(button => {
+        button.addEventListener("click", () => {
+            trendState.split = button.dataset.value;
+            renderTrendChart(lastAnalyticsData);
+        });
+    });
+
+    document.querySelector("#trendPrev").addEventListener("click", () => {
+        trendState.anchor = shiftedAnchor(trendState.mode, trendState.anchor, -1);
+        renderTrendChart(lastAnalyticsData);
+    });
+
+    document.querySelector("#trendNext").addEventListener("click", () => {
+        trendState.anchor = shiftedAnchor(trendState.mode, trendState.anchor, 1);
+        renderTrendChart(lastAnalyticsData);
+    });
+
+    document.querySelector("#trendToday").addEventListener("click", () => {
+        trendState.anchor = new Date();
+        renderTrendChart(lastAnalyticsData);
+    });
+}
+
+setupTrendControls();
+
+let lastAnalyticsData = null;
+
 // Плавная кривая без «выбросов» ниже нуля (монотонная интерполяция Фрича–Карлсона)
 function smoothPath(points) {
 
@@ -459,19 +510,43 @@ function smoothPath(points) {
     return d;
 }
 
-function renderTrendChart(data) {
+function renderTrendChart(source) {
+
+    if (!source) return;
 
     const box = document.querySelector("#trendChart");
     const legend = document.querySelector("#trendLegend");
 
-    if (!data.totalSeconds) {
-        box.innerHTML = `<div class="chart-empty">No tracked work in this period yet.</div>`;
+    // Свой период для этого графика
+    const range = periodRange(trendState.mode, trendState.anchor);
+    const inRange = source.sessions.filter(s => s.start < range.end && s.end > range.start);
+    const bucketed = bucketize(range, inRange, source.cats);
+
+    document.querySelectorAll("#trendPeriod button").forEach(b => b.classList.toggle("on", b.dataset.value === trendState.mode));
+    document.querySelectorAll("#trendSplit button").forEach(b => b.classList.toggle("on", b.dataset.value === trendState.split));
+    document.querySelector("#trendLabel").textContent = periodTitle(range, trendState.mode);
+    document.querySelector("#trendNext").disabled = range.end > new Date(serverNow());
+
+    // «Total» — одна линия: сумма всех категорий
+    const isTotal = trendState.split === "total";
+
+    const data = {
+        buckets: isTotal
+            ? bucketed.buckets.map(b => ({ ...b, values: { [TOTAL_KEY]: b.total } }))
+            : bucketed.buckets,
+        cats: isTotal
+            ? { colorOf: () => TOTAL_COLOR }
+            : source.cats
+    };
+
+    if (!bucketed.totalSeconds) {
+        box.innerHTML = `<div class="chart-empty">No tracked work in this period.</div>`;
         legend.innerHTML = "";
         return;
     }
 
-    const keys = data.usedKeys;
-    const visible = keys.filter(k => !hiddenTrendSeries.has(k));
+    const keys = isTotal ? [TOTAL_KEY] : bucketed.usedKeys;
+    const visible = isTotal ? keys : keys.filter(k => !hiddenTrendSeries.has(k));
 
     const width = Math.max(300, box.clientWidth || 600);
     const height = 260;
@@ -578,8 +653,9 @@ function renderTrendChart(data) {
             .map(k => `<div class="tt-row"><i style="background:${data.cats.colorOf(k)}"></i>${escapeHtml(k)}<b>${formatMinutes(bucket.values[k] / 60)}</b></div>`)
             .join("");
 
-        if (rows) {
-            showChartTooltip(event, `<div class="tt-title">${bucket.title}</div>${rows}`);
+        // Для одной линии хватает подписи над точкой; для категорий — подробности ниже курсора
+        if (rows && !isTotal && visible.length > 1) {
+            showChartTooltip(event, `<div class="tt-title">${bucket.title}</div>${rows}`, 40);
         } else {
             hideChartTooltip();
         }
@@ -601,7 +677,12 @@ function renderTrendChart(data) {
 
     hit.addEventListener("mouseleave", hide);
 
-    // Легенда-переключатель
+    // Легенда-переключатель (для одной линии «Total» — просто подпись с итогом)
+    if (isTotal) {
+        legend.innerHTML = `<span><i style="background:${TOTAL_COLOR}"></i>All categories <b>${formatMinutes(bucketed.totalSeconds / 60)}</b></span>`;
+        return;
+    }
+
     legend.innerHTML = keys.map(k => `
         <button type="button" class="legend-toggle ${hiddenTrendSeries.has(k) ? "off" : ""}" data-key="${escapeHtml(k)}">
             <i style="background:${data.cats.colorOf(k)}"></i>${escapeHtml(k)}
@@ -615,7 +696,7 @@ function renderTrendChart(data) {
             if (!hiddenTrendSeries.has(key) && visible.length === 1) return;
 
             hiddenTrendSeries.has(key) ? hiddenTrendSeries.delete(key) : hiddenTrendSeries.add(key);
-            renderTrendChart(data);
+            renderTrendChart(lastAnalyticsData);
         });
     });
 }
@@ -867,7 +948,7 @@ function renderBalance(data) {
 // ПОДСКАЗКА
 // ========================================
 
-function showChartTooltip(event, html) {
+function showChartTooltip(event, html, extraY = 0) {
 
     chartTooltip.innerHTML = html;
     chartTooltip.classList.add("visible");
@@ -875,7 +956,7 @@ function showChartTooltip(event, html) {
     const pad = 14;
     const rect = chartTooltip.getBoundingClientRect();
     let x = event.clientX + pad;
-    let y = event.clientY + pad;
+    let y = event.clientY + pad + extraY;
 
     if (x + rect.width > window.innerWidth - 8) x = event.clientX - rect.width - pad;
     if (y + rect.height > window.innerHeight - 8) y = event.clientY - rect.height - pad;

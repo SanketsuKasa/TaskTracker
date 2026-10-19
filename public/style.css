@@ -3758,3 +3758,40 @@ body.productivity-on .analytics.prod-only {
 .legend-toggle.off i {
     opacity: 0.25;
 }
+
+/* ---------- Переключатели графика тренда ---------- */
+
+.trend-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.small-seg button {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.period-nav.compact span {
+    min-width: 130px;
+    font-size: 13px;
+}
+
+.period-nav.compact button {
+    height: 30px;
+    min-width: 30px;
+    font-size: 13px;
+}
+
+@media (max-width: 760px) {
+    .trend-controls > * {
+        width: 100%;
+    }
+}
+
+.small-seg button {
+    white-space: nowrap;
+}

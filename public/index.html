@@ -536,7 +536,27 @@
 
                         <div class="profile-card chart-card">
                             <h3>Activity trend</h3>
-                            <p class="card-hint">How your active time changes — one line per category. Click a category to hide or show it.</p>
+                            <p class="card-hint">How your active time changes. Click a category below to hide or show its line.</p>
+
+                            <div class="trend-controls">
+                                <div class="segmented small-seg" id="trendPeriod">
+                                    <button type="button" data-value="day">Day</button>
+                                    <button type="button" data-value="week">Week</button>
+                                    <button type="button" data-value="month">Month</button>
+                                </div>
+
+                                <div class="period-nav compact">
+                                    <button type="button" id="trendPrev" title="Previous">‹</button>
+                                    <span id="trendLabel"></span>
+                                    <button type="button" id="trendNext" title="Next">›</button>
+                                    <button type="button" id="trendToday">Today</button>
+                                </div>
+
+                                <div class="segmented small-seg" id="trendSplit">
+                                    <button type="button" data-value="category">By category</button>
+                                    <button type="button" data-value="total">Total</button>
+                                </div>
+                            </div>
                             <div class="chart trend-chart" id="trendChart"></div>
                             <div class="chart-legend trend-legend" id="trendLegend"></div>
                         </div>
