@@ -146,7 +146,12 @@ const views = {
     },
     profile: {
         title: "Profile",
-        subtitle: "Your photo, name and account settings.",
+        subtitle: "Your photo, stats and progress.",
+        filter: "all"
+    },
+    settings: {
+        title: "Settings",
+        subtitle: "Account, appearance, categories and productivity.",
         filter: "all"
     }
 };
@@ -308,6 +313,40 @@ function setView(view) {
 
     render();
 }
+
+// ---------- Вкладки настроек ----------
+
+const settingsTabs = document.querySelectorAll(".settings-tab");
+const settingsPanels = document.querySelectorAll(".settings-panel");
+
+function setSettingsTab(tab) {
+
+    if (![...settingsTabs].some(t => t.dataset.tab === tab)) {
+        tab = "account";
+    }
+
+    settingsTabs.forEach(t => t.classList.toggle("active", t.dataset.tab === tab));
+    settingsPanels.forEach(p => p.classList.toggle("active", p.dataset.panel === tab));
+
+    // Запоминаем последнюю вкладку (если браузер разрешает)
+    try { localStorage.setItem("settingsTab", tab); } catch (error) { }
+}
+
+function openSettings(tab) {
+    setView("settings");
+    if (tab) setSettingsTab(tab);
+}
+
+settingsTabs.forEach(t => {
+    t.addEventListener("click", () => setSettingsTab(t.dataset.tab));
+});
+
+document.querySelectorAll("[data-open-settings]").forEach(button => {
+    button.addEventListener("click", () => openSettings(button.dataset.openSettings));
+});
+
+try { setSettingsTab(localStorage.getItem("settingsTab") || "account"); } catch (error) { }
+
 
 navItems.forEach(item => {
     item.addEventListener("click", (event) => {
@@ -948,12 +987,59 @@ function fillSubcategorySelect(selectedSub) {
     subs.forEach(sub => {
         taskSubcategory.append(option(sub, sub, sub === selectedSub));
     });
+
+    updateDeleteSubButton();
 }
 
 taskCategory.addEventListener("change", () => fillSubcategorySelect(""));
+taskSubcategory.addEventListener("change", updateDeleteSubButton);
+
+
+// ---------- Удалить выбранную подкатегорию прямо в окне задачи ----------
+
+const deleteSubcategoryButton = document.querySelector("#deleteSubcategoryButton");
+
+function updateDeleteSubButton() {
+    deleteSubcategoryButton.disabled = !taskSubcategory.value;
+    deleteSubcategoryButton.classList.remove("confirm");
+}
+
+deleteSubcategoryButton.addEventListener("click", async () => {
+
+    const sub = taskSubcategory.value;
+    const categoryName = taskCategory.value;
+
+    if (!sub) return;
+
+    // Первый клик — спросить, второй — удалить
+    if (!deleteSubcategoryButton.classList.contains("confirm")) {
+        deleteSubcategoryButton.classList.add("confirm");
+        deleteSubcategoryButton.title = `Click again to delete «${sub}»`;
+        categoryError.textContent = `Click the red button again to delete «${sub}» from ${categoryName}.`;
+        return;
+    }
+
+    try {
+
+        await saveCategories(categories.map(c => c.name === categoryName
+            ? { ...c, subs: c.subs.filter(s => s !== sub) }
+            : c));
+
+        fillCategorySelect(categoryName, "");
+        categoryError.textContent = "";
+        showToast(`Subcategory «${sub}» deleted`);
+
+    } catch (error) {
+
+        categoryError.textContent = error.message;
+
+    }
+});
 
 
 // ---------- Быстрое добавление прямо в окне задачи ----------
+
+const pendingInlineAdds = [];
 
 function setupInlineAdd(buttonId, rowId, inputId, saveId, onSave) {
 
@@ -988,6 +1074,13 @@ function setupInlineAdd(buttonId, rowId, inputId, saveId, onSave) {
     }
 
     save.addEventListener("click", submit);
+
+    // Чтобы при сохранении задачи введённое, но не добавленное название тоже сохранилось
+    pendingInlineAdds.push(async () => {
+        if (row.classList.contains("visible") && input.value.trim()) {
+            await submit();
+        }
+    });
 
     // Enter в поле — добавить, а не отправить всю форму
     input.addEventListener("keydown", (event) => {
@@ -1166,12 +1259,21 @@ function renderCategoryManager() {
         // Добавить подкатегорию
         const subForm = item.querySelector(".sub-add");
 
+        // Сохраняем и по Enter, и когда уходим из поля
+        subForm.querySelector("input").addEventListener("blur", () => {
+            if (subForm.querySelector("input").value.trim()) {
+                subForm.requestSubmit();
+            }
+        });
+
         subForm.addEventListener("submit", (event) => {
 
             event.preventDefault();
 
-            const value = subForm.querySelector("input").value.trim();
+            const input = subForm.querySelector("input");
+            const value = input.value.trim();
             if (!value) return;
+            input.value = "";
 
             updateCategories(
                 categories.map(c => c === category ? { ...c, subs: [...c.subs, value] } : c),
@@ -1378,6 +1480,11 @@ taskForm.addEventListener("submit", async (event) => {
         return;
     }
 
+    // Сначала сохраняем категорию/подкатегорию, которую ввели, но не нажали «Add»
+    for (const savePending of pendingInlineAdds) {
+        await savePending();
+    }
+
     const fields = {
         title: title,
         description: taskDescription.value.trim(),
@@ -1562,6 +1669,8 @@ const passwordMessage = document.querySelector("#passwordMessage");
 function fillProfile(user) {
 
     profileInitial.textContent = paintAvatar(profilePhoto, user);
+    document.querySelector("#profileHeroInitial").textContent =
+        paintAvatar(document.querySelector("#profileHeroPhoto"), user);
     profileNameTitle.textContent = user.name;
     profileEmailText.textContent = user.email;
     verifiedBadge.style.display = user.emailVerified ? "" : "none";
@@ -1608,6 +1717,7 @@ async function readResult(response) {
 // ---------- Фото ----------
 
 profilePhoto.addEventListener("click", () => photoInput.click());
+document.querySelector("#profileHeroPhoto").addEventListener("click", () => photoInput.click());
 uploadPhoto.addEventListener("click", () => photoInput.click());
 
 // Обрезаем фото до квадрата 256×256 прямо в браузере

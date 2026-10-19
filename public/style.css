@@ -2406,3 +2406,192 @@ body.is-dragging .calendar-day.drop-over {
     font-size: 12px;
     outline: none;
 }
+
+
+/* ========================================
+   SETTINGS
+======================================== */
+
+.settings {
+    display: none;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.main[data-view="settings"] .settings {
+    display: flex;
+}
+
+.main[data-view="settings"] .stats,
+.main[data-view="settings"] .content-grid,
+.main[data-view="settings"] .add-button {
+    display: none;
+}
+
+.settings-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    padding: 5px;
+
+    border: 1px solid #222631;
+    border-radius: 12px;
+    background: #11141b;
+    align-self: flex-start;
+}
+
+.settings-tab {
+    padding: 10px 16px;
+
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #858b9b;
+
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.settings-tab:hover {
+    color: white;
+    background: #191d27;
+}
+
+.settings-tab.active {
+    background: #211c3b;
+    color: #c4b2ff;
+}
+
+.settings-panel {
+    display: none;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.settings-panel.active {
+    display: flex;
+}
+
+.photo-card {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.photo-card .profile-photo {
+    width: 96px;
+    height: 96px;
+    font-size: 38px;
+}
+
+.photo-card h3 {
+    margin-bottom: 4px;
+}
+
+.coming-soon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    padding: 48px 24px;
+}
+
+.coming-soon h3 {
+    margin-bottom: 0;
+}
+
+.coming-soon p {
+    max-width: 420px;
+    color: #73798a;
+    font-size: 14px;
+}
+
+.coming-icon {
+    width: 64px;
+    height: 64px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 6px;
+
+    border-radius: 18px;
+    background: #211c3b;
+    font-size: 28px;
+}
+
+.soon-badge {
+    margin-top: 6px;
+    padding: 5px 12px;
+
+    border: 1px solid #3b3263;
+    border-radius: 20px;
+    color: #a98cff;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Кнопка удаления подкатегории в окне задачи */
+.icon-button.danger {
+    color: #858b9b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-button.danger:hover:not(:disabled) {
+    color: #ff6b6b;
+    border-color: #4a2328;
+    background: #2a1619;
+}
+
+.icon-button.danger.confirm {
+    color: white;
+    border-color: #e5484d;
+    background: #e5484d;
+}
+
+.icon-button:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+@media (max-width: 650px) {
+
+    .photo-card {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .photo-card .photo-buttons {
+        justify-content: center;
+    }
+
+    .settings-tabs {
+        align-self: stretch;
+    }
+
+    .settings-tab {
+        flex: 1;
+        padding: 9px 10px;
+        font-size: 13px;
+    }
+
+}
+
+/* Вкладки — в ряд (не наследуем стиль бокового меню) */
+nav.settings-tabs {
+    flex-direction: row;
+}
+
+.photo-hint {
+    display: block;
+    color: #606777;
+    font-size: 12px;
+}

@@ -57,6 +57,11 @@
                     Profile
                 </a>
 
+                <a href="#" class="nav-item" data-view="settings">
+                    <span>⚙</span>
+                    Settings
+                </a>
+
             </nav>
 
             <div class="sidebar-bottom">
@@ -315,16 +320,15 @@
 
 
             <!-- ======================================== -->
-            <!-- ПРОФИЛЬ -->
+            <!-- ПРОФИЛЬ (просмотр) -->
             <!-- ======================================== -->
 
             <section class="profile" id="profile">
 
-                <!-- Карточка с фото -->
                 <div class="profile-card profile-hero">
 
-                    <div class="profile-photo" id="profilePhoto" title="Change photo">
-                        <span id="profileInitial">U</span>
+                    <div class="profile-photo" id="profileHeroPhoto" title="Change photo">
+                        <span id="profileHeroInitial">U</span>
                         <div class="photo-overlay">📷</div>
                     </div>
 
@@ -337,16 +341,11 @@
                         <small id="profileSince"></small>
 
                         <div class="photo-buttons">
-                            <button type="button" class="create-button" id="uploadPhoto">Upload photo</button>
-                            <button type="button" class="cancel-button" id="removePhoto">Remove</button>
+                            <button type="button" class="create-button" data-open-settings="account">⚙ Edit profile</button>
                         </div>
-                        <small class="photo-hint">JPG, PNG or WEBP. The photo is cropped to a square automatically.</small>
                     </div>
 
-                    <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" hidden>
-
                 </div>
-
 
                 <!-- Статистика профиля -->
                 <div class="profile-stats">
@@ -356,53 +355,110 @@
                     <div class="profile-stat"><strong id="pOverdue">0</strong><span>Overdue</span></div>
                 </div>
 
+            </section>
 
-                <div class="profile-grid">
 
-                    <!-- Имя -->
-                    <form class="profile-card" id="nameForm">
-                        <h3>Personal info</h3>
+            <!-- ======================================== -->
+            <!-- НАСТРОЙКИ -->
+            <!-- ======================================== -->
 
-                        <div class="form-group">
-                            <label for="profileName">Name</label>
-                            <input type="text" id="profileName" maxlength="40" required>
+            <section class="settings" id="settings">
+
+                <!-- Вкладки -->
+                <nav class="settings-tabs">
+                    <button type="button" class="settings-tab active" data-tab="account">👤 Account</button>
+                    <button type="button" class="settings-tab" data-tab="appearance">🎨 Appearance</button>
+                    <button type="button" class="settings-tab" data-tab="categories">🏷 Categories</button>
+                    <button type="button" class="settings-tab" data-tab="productivity">⚡ Productivity</button>
+                </nav>
+
+
+                <!-- ---------- Аккаунт ---------- -->
+                <div class="settings-panel active" data-panel="account">
+
+                    <!-- Фото -->
+                    <div class="profile-card photo-card">
+
+                        <div class="profile-photo" id="profilePhoto" title="Change photo">
+                            <span id="profileInitial">U</span>
+                            <div class="photo-overlay">📷</div>
                         </div>
 
-                        <div class="form-group">
-                            <label for="profileEmail">Email</label>
-                            <input type="email" id="profileEmail" disabled>
+                        <div>
+                            <h3>Profile photo</h3>
+                            <div class="photo-buttons">
+                                <button type="button" class="create-button" id="uploadPhoto">Upload photo</button>
+                                <button type="button" class="cancel-button" id="removePhoto">Remove</button>
+                            </div>
+                            <small class="photo-hint">JPG, PNG or WEBP. The photo is cropped to a square automatically.</small>
                         </div>
 
-                        <div class="form-message" id="nameMessage"></div>
+                        <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" hidden>
 
-                        <button type="submit" class="create-button">Save changes</button>
-                    </form>
+                    </div>
+
+                    <div class="profile-grid">
+
+                        <!-- Имя -->
+                        <form class="profile-card" id="nameForm">
+                            <h3>Personal info</h3>
+
+                            <div class="form-group">
+                                <label for="profileName">Name</label>
+                                <input type="text" id="profileName" maxlength="40" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="profileEmail">Email</label>
+                                <input type="email" id="profileEmail" disabled>
+                            </div>
+
+                            <div class="form-message" id="nameMessage"></div>
+
+                            <button type="submit" class="create-button">Save changes</button>
+                        </form>
 
 
-                    <!-- Пароль -->
-                    <form class="profile-card" id="passwordForm">
-                        <h3>Change password</h3>
+                        <!-- Пароль -->
+                        <form class="profile-card" id="passwordForm">
+                            <h3>Change password</h3>
 
-                        <div class="form-group">
-                            <label for="currentPassword">Current password</label>
-                            <input type="password" id="currentPassword" autocomplete="current-password">
-                        </div>
+                            <div class="form-group">
+                                <label for="currentPassword">Current password</label>
+                                <input type="password" id="currentPassword" autocomplete="current-password">
+                            </div>
 
-                        <div class="form-group">
-                            <label for="newPassword">New password</label>
-                            <input type="password" id="newPassword" autocomplete="new-password" placeholder="At least 6 characters">
-                        </div>
+                            <div class="form-group">
+                                <label for="newPassword">New password</label>
+                                <input type="password" id="newPassword" autocomplete="new-password" placeholder="At least 6 characters">
+                            </div>
 
-                        <div class="form-message" id="passwordMessage"></div>
+                            <div class="form-message" id="passwordMessage"></div>
 
-                        <button type="submit" class="create-button">Update password</button>
-                    </form>
+                            <button type="submit" class="create-button">Update password</button>
+                        </form>
+
+                    </div>
+
+                </div>
 
 
-                    <!-- Категории -->
+                <!-- ---------- Внешний вид ---------- -->
+                <div class="settings-panel" data-panel="appearance">
+                    <div class="profile-card coming-soon">
+                        <div class="coming-icon">🎨</div>
+                        <h3>Appearance</h3>
+                        <p>Themes, accent colors and layout options will live here.</p>
+                        <span class="soon-badge">Coming soon</span>
+                    </div>
+                </div>
+
+
+                <!-- ---------- Категории ---------- -->
+                <div class="settings-panel" data-panel="categories">
                     <div class="profile-card categories-card">
                         <h3>Categories</h3>
-                        <p class="card-hint">The 4 base categories always stay. Add your own, rename them with ✎, and click a subcategory to rename it.</p>
+                        <p class="card-hint">The 4 base categories always stay. Add your own, rename them with ✎, click a subcategory to rename it, × to delete it.</p>
 
                         <div class="category-list" id="categoryList"></div>
 
@@ -413,7 +469,17 @@
 
                         <div class="form-message" id="categoriesMessage"></div>
                     </div>
+                </div>
 
+
+                <!-- ---------- Продуктивность ---------- -->
+                <div class="settings-panel" data-panel="productivity">
+                    <div class="profile-card coming-soon">
+                        <div class="coming-icon">⚡</div>
+                        <h3>Productivity</h3>
+                        <p>A place for productivity tools and settings. We will design it together.</p>
+                        <span class="soon-badge">Coming soon</span>
+                    </div>
                 </div>
 
             </section>
@@ -523,6 +589,9 @@
                         <div class="select-row">
                             <select id="taskSubcategory"></select>
                             <button type="button" class="icon-button" id="addSubcategoryButton" title="New subcategory">+</button>
+                            <button type="button" class="icon-button danger" id="deleteSubcategoryButton" title="Delete selected subcategory">
+                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+                            </button>
                         </div>
 
                         <div class="inline-add" id="newSubcategoryRow">
