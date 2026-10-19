@@ -12,9 +12,11 @@ let sharedData = null;        // { owner, permission, categories, tasks }
 let sharedFilter = "all";
 let sharesTimer = null;
 
-const MARK_TEXT = {
-    helping: "в процесі допомоги",
-    done: "завершено"
+// [перший рядок, початок другого рядка] — ім'я додається в кінці
+const MARK_LABEL = {
+    helping: ["в процесі допомоги", "by "],
+    done: ["зроблено", "by "],
+    helped: ["зроблено з допомогою", ""]
 };
 
 
@@ -91,15 +93,22 @@ function marksStripHtml(task, mode = "owner") {
             color = isMe ? (sharesData.myColor || mark.color) : mark.color;
         }
 
-        const label = MARK_TEXT[mark.type] || mark.type;
+        // Якщо задача виконана — мітка підсумовує, хто її зробив:
+        //   «зроблено by X»          — X сам натиснув «Done»
+        //   «зроблено з допомогою X» — X допомагав, а галочку поставила власниця
+        const kind = task.status === "done"
+            ? (mark.type === "done" ? "done" : "helped")
+            : mark.type;
+        const label = MARK_LABEL[kind][0];
+        const byText = `${MARK_LABEL[kind][1]}${name}`;
         const when = mark.at ? new Date(mark.at).toLocaleString("uk-UA", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "";
 
         return `
-            <div class="mark-strip ${mark.type}" style="--mark:${escapeHtml(color || "#b69cff")}"
-                 data-tip-type="${escapeHtml(mark.type)}" data-tip-name="${escapeHtml(name)}" data-tip-when="${escapeHtml(when)}">
+            <div class="mark-strip ${kind}" style="--mark:${escapeHtml(color || "#b69cff")}"
+                 data-tip-type="${escapeHtml(kind)}" data-tip-name="${escapeHtml(name)}" data-tip-when="${escapeHtml(when)}">
                 <span class="mark-lines">
                     <span class="mark-line">${escapeHtml(label)}</span>
-                    <span class="mark-line by">by ${escapeHtml(name)}</span>
+                    <span class="mark-line by">${escapeHtml(byText)}</span>
                 </span>
                 ${mode === "owner" ? `<button type="button" class="mark-remove" data-user="${escapeHtml(mark.userId)}" aria-label="Remove this mark">×</button>` : ""}
             </div>`;
@@ -444,7 +453,8 @@ function bindSharedPage() {
 
 const MARK_TIP_TITLE = {
     helping: "🤝 В процесі допомоги",
-    done: "✅ Завершено"
+    done: "✅ Зроблено",
+    helped: "💞 Зроблено з допомогою"
 };
 
 function markTipElement() {
@@ -473,7 +483,7 @@ document.addEventListener("mouseover", (event) => {
     tip.innerHTML = removeHover
         ? `<strong>Прибрати мітку</strong>`
         : `<strong>${MARK_TIP_TITLE[strip.dataset.tipType] || escapeHtml(strip.dataset.tipType)}</strong>
-           <span>by ${escapeHtml(strip.dataset.tipName)}</span>
+           <span>${strip.dataset.tipType === "helped" ? "" : "by "}${escapeHtml(strip.dataset.tipName)}</span>
            ${strip.dataset.tipWhen ? `<small>${escapeHtml(strip.dataset.tipWhen)}</small>` : ""}`;
 
     const box = strip.getBoundingClientRect();

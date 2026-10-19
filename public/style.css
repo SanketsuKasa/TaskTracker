@@ -4808,7 +4808,8 @@ input[type="range"] {
     box-shadow: inset 2px 0 0 var(--mark), 0 0 14px color-mix(in srgb, var(--mark) 25%, transparent);
 }
 
-.mark-strip.done {
+.mark-strip.done,
+.mark-strip.helped {
     background: color-mix(in srgb, var(--mark) 45%, transparent);
 }
 
