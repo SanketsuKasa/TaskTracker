@@ -221,7 +221,7 @@ function charmSvg(item, idPrefix = "c") {
 
     const ringId = `${idPrefix}-ring-${item.id}`;
     // Повторяем фразу, чтобы она обошла весь круг
-    const text = `${item.phrase} ✦ `.repeat(item.phrase.length < 22 ? 3 : item.phrase.length < 40 ? 2 : 1);
+    const text = `${item.phrase} ✦ `.repeat(Math.max(1, Math.floor(68 / (item.phrase.length + 3))));
 
     return `
         <svg viewBox="0 0 100 100" aria-hidden="true">
@@ -521,8 +521,10 @@ function drawGlow() {
     // Склеиваем живые участки в одну плавную волну на всю ширину экрана:
     // пустые часы выкидываем, между участками остаётся только мягкая впадинка.
     const seq = [];
+    const marks = [];   // где в волне начинается каждый живой участок (для подписей)
     runs.forEach((r, k) => {
         if (k > 0) seq.push(minVisible * 0.5, minVisible * 0.5);
+        marks.push({ pos: seq.length, time: start + r.from * step });
         for (let i = r.from; i <= r.to; i++) seq.push(values[i]);
     });
 
@@ -530,6 +532,7 @@ function drawGlow() {
     const color = themeAccent();
     const main = [];
     const echo = [];
+    let labels = "";
 
     if (seq.length > 1) {
 
@@ -561,13 +564,44 @@ function drawGlow() {
             - Math.sin(k / points * Math.PI * 3) * h * 0.025 * scale;
 
         main.push(smoothPath(wave.map((v, k) => [px(k), py(v, k, 1)])));
+
+        // Подписи: полупрозрачная вертикальная линия + дата/время начала участка.
+        // Новый день — «пн 19.10», тот же день — только «14:30». Слишком близкие пропускаем.
+        const DAYS = ["нд", "пн", "вт", "ср", "чт", "пт", "сб"];
+        const pad = v => String(v).padStart(2, "0");
+        const top = base - amp - h * 0.04;
+        let lastX = -Infinity;
+        let lastDay = "";
+
+        marks.forEach(m => {
+            const x = margin + (m.pos / (seq.length - 1)) * (w - margin * 2);
+            const d = new Date(m.time);
+            const dayKey = d.toDateString();
+            const newDay = dayKey !== lastDay;
+            const minGap = newDay ? 70 : 52;
+            if (x - lastX < minGap) return;
+
+            const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            const title = newDay ? `${DAYS[d.getDay()]} ${pad(d.getDate())}.${pad(d.getMonth() + 1)}` : time;
+            const sub = newDay ? time : "";
+
+            labels += `
+                <line class="glow-mark" x1="${x}" x2="${x}" y1="${top + 22}" y2="${base}" />
+                <text class="glow-label ${newDay ? "day" : ""}" x="${x + 5}" y="${top + 8}">${title}</text>
+                ${sub ? `<text class="glow-label sub" x="${x + 5}" y="${top + 21}">${sub}</text>` : ""}`;
+
+            lastX = x;
+            lastDay = dayKey;
+        });
+
+        labels += `<text class="glow-label caption" x="${w - margin}" y="${base + h * 0.035}" text-anchor="end">активність за 7 днів · лише час, коли ви працювали</text>`;
         echo.push(smoothPath(wave.map((v, k) => [px(k), py(v, k, 0.55)])));
     }
 
     bgGlow.setAttribute("viewBox", `0 0 ${w} ${h}`);
     bgGlow.style.color = color;
     bgGlow.style.opacity = intensity;
-    bgGlow.innerHTML = main.map((d, i) => `
+    bgGlow.innerHTML = labels + main.map((d, i) => `
         <path class="glow-echo" d="${echo[i]}" stroke="${color}"/>
         <path class="glow-wide" d="${d}" stroke="${color}"/>
         <path class="glow-line" d="${d}" stroke="${color}"/>

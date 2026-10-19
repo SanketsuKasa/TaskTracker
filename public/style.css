@@ -3907,6 +3907,35 @@ body.productivity-on .analytics.prod-only {
     filter: blur(10px);
 }
 
+.bg-glow .glow-mark {
+    stroke: currentColor;
+    stroke-width: 1;
+    stroke-dasharray: 2 6;
+    opacity: 0.22;
+}
+
+.bg-glow .glow-label {
+    fill: currentColor;
+    font-size: 11px;
+    letter-spacing: 0.3px;
+    opacity: 0.55;
+    font-variant-numeric: tabular-nums;
+}
+
+.bg-glow .glow-label.day {
+    font-size: 12px;
+    opacity: 0.75;
+}
+
+.bg-glow .glow-label.sub {
+    opacity: 0.4;
+}
+
+.bg-glow .glow-label.caption {
+    font-size: 10px;
+    opacity: 0.35;
+}
+
 .bg-glow .glow-echo {
     stroke-width: 1;
     opacity: 0.28;
@@ -4005,9 +4034,9 @@ body.productivity-on .analytics.prod-only {
 
 .charm-text {
     fill: currentColor;
-    font-size: 5.2px;
+    font-size: 6.3px;
     letter-spacing: 0.4px;
-    opacity: 0.55;
+    opacity: 0.65;
 }
 
 .charm.near .charm-shape {
