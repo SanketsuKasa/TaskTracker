@@ -6,3 +6,6 @@ mail.config.json
 .DS_Store
 Thumbs.db
 *.log
+
+# Тимчасові файли під час запису даних
+*.tmp

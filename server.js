@@ -41,21 +41,8 @@ initMailer();
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 // ==============================
 
-// Прочитать JSON-файл (если файла нет — вернуть пустой массив)
-function readJson(file) {
-
-    if (!fs.existsSync(file)) {
-        return [];
-    }
-
-    const data = fs.readFileSync(file, "utf8");
-
-    return data.trim() ? JSON.parse(data) : [];
-}
-
-function writeJson(file, data) {
-    fs.writeFileSync(file, JSON.stringify(data, null, 2));
-}
+// Чтение и запись JSON-файлов — в storage.js (общие для всех модулей)
+const { readJson, writeJson } = require("./storage");
 
 // Проверка даты формата YYYY-MM-DD
 function isValidDate(value) {

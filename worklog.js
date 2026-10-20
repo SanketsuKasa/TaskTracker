@@ -5,22 +5,12 @@
 // events.json       — что и когда менялось в плане (ничего не перезаписывается)
 // ========================================
 
-const fs = require("fs");
+const { readJson, writeJson } = require("./storage");
 const path = require("path");
 const crypto = require("crypto");
 
 const sessionsFile = path.join(__dirname, "worksessions.json");
 const eventsFile = path.join(__dirname, "events.json");
-
-function readJson(file) {
-    if (!fs.existsSync(file)) return [];
-    const data = fs.readFileSync(file, "utf8");
-    return data.trim() ? JSON.parse(data) : [];
-}
-
-function writeJson(file, data) {
-    fs.writeFileSync(file, JSON.stringify(data, null, 2));
-}
 
 function newId(prefix) {
     return `${prefix}_${Date.now().toString(36)}${crypto.randomBytes(4).toString("hex")}`;
@@ -97,9 +87,8 @@ function closeSession(session, endTime = new Date(), note = "") {
 }
 
 // Итог по задаче: время считается по меткам начала и конца, а не по таймеру браузера
-function workSummary(taskId, sessions) {
+function summaryOf(own) {
 
-    const own = sessions.filter(s => s.taskId === taskId);
     const active = own.find(s => s.status === "active");
 
     return {
@@ -110,6 +99,31 @@ function workSummary(taskId, sessions) {
         activeStartedAt: active ? active.startedAt : null,
         activeConfirmedAt: active ? active.confirmedAt : null
     };
+}
+
+// Сессии, сгруппированные по задачам. Считается один раз на массив сессий,
+// а не заново для каждой задачи (список задач грузится быстро даже при большой истории)
+const groupedCache = new WeakMap();
+
+function sessionsByTask(sessions) {
+
+    let grouped = groupedCache.get(sessions);
+
+    if (!grouped || grouped.length !== sessions.length) {
+        const map = new Map();
+        sessions.forEach(s => {
+            if (!map.has(s.taskId)) map.set(s.taskId, []);
+            map.get(s.taskId).push(s);
+        });
+        grouped = { length: sessions.length, map };
+        groupedCache.set(sessions, grouped);
+    }
+
+    return grouped.map;
+}
+
+function workSummary(taskId, sessions) {
+    return summaryOf(sessionsByTask(sessions).get(taskId) || []);
 }
 
 function withWork(task, sessions) {
