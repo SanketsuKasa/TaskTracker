@@ -5257,3 +5257,31 @@ button.wish-check:hover {
 .need-segment button {
     white-space: nowrap;
 }
+
+
+/* ---------- Поправки прогноза (знакомство, нагрузка, энергия, тип) ---------- */
+
+.forecast-factors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.forecast .factor-chip {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 12px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface-2);
+    color: var(--text-2);
+    cursor: help;
+}
+
+.factor-chip b {
+    margin-left: 3px;
+}
+
+.factor-chip.up b { color: #f5a97f; }
+.factor-chip.down b { color: #7de8ab; }

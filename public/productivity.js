@@ -422,6 +422,7 @@ function setupSegment(segment, allowEmpty) {
         button.addEventListener("click", () => {
             const already = button.classList.contains("on");
             setSegment(segment, already && allowEmpty ? "" : button.dataset.value);
+            updateForecast();
         });
     });
 }
@@ -443,6 +444,8 @@ setupSegment(loadSegment, true);
 
 [estimateHours, estimateMins].forEach(input => input.addEventListener("input", updateForecast));
 document.querySelector("#taskCategory").addEventListener("change", updateForecast);
+familiaritySelect.addEventListener("change", updateForecast);
+taskTypeSelect.addEventListener("change", updateForecast);
 
 function readEstimateMinutes() {
     const total = (Number(estimateHours.value) || 0) * 60 + (Number(estimateMins.value) || 0);
@@ -516,6 +519,37 @@ function median(values) {
 
 function forecastFor(category, difficulty, estimateMinutes) {
 
+    const base = baseForecastFor(category, difficulty, estimateMinutes);
+
+    const rated = tasks.filter(t =>
+        t.status === "done" && t.work && t.work.totalSeconds >= 60 && t.estimateMinutes > 0 &&
+        (!editingTask || t.id !== editingTask.id));
+
+    const adj = forecastAdjustments(currentFactorValues(), rated);
+
+    if (base.ready) {
+        return { ...base, baseMinutes: base.minutes, minutes: base.minutes * adj.multiplier, adj };
+    }
+
+    // Истории ещё мало, но есть ваша оценка и поправки — уже можно уточнить оценку
+    if (estimateMinutes && adj.items.length) {
+        return {
+            ready: true,
+            mode: "estimate",
+            count: base.count,
+            label: "your estimate",
+            confidence: "low",
+            baseMinutes: estimateMinutes,
+            minutes: estimateMinutes * adj.multiplier,
+            adj
+        };
+    }
+
+    return base;
+}
+
+function baseForecastFor(category, difficulty, estimateMinutes) {
+
     const finished = tasks.filter(t =>
         t.status === "done" &&
         (t.work && t.work.totalSeconds >= 60) &&
@@ -584,6 +618,102 @@ function forecastFor(category, difficulty, estimateMinutes) {
     };
 }
 
+// ========================================
+// ПОПРАВКИ ПРОГНОЗА: энергия, нагрузка недели, знакомство с задачей, тип задачи
+// ----------------------------------------
+// У каждой поправки есть «обычное» влияние (DEFAULT). Как только накопится история,
+// оно постепенно заменяется ВАШИМ личным: смотрим, во сколько раз вы ошибались
+// в задачах с таким же значением по сравнению с остальными.
+// ========================================
+
+const FORECAST_FACTORS = [
+    {
+        key: "familiarity",
+        name: v => ({ new: "New task", similar: "Did similar before", routine: "Well known" })[v],
+        defaults: { new: 1.25, similar: 1.05, routine: 0.9 }
+    },
+    {
+        key: "load",
+        name: v => `Workload ${v}/5`,
+        defaults: { 1: 0.95, 2: 0.98, 3: 1, 4: 1.08, 5: 1.15 }
+    },
+    {
+        key: "energy",
+        name: v => `Energy ${v}/5`,
+        defaults: { 1: 1.2, 2: 1.1, 3: 1, 4: 0.95, 5: 0.9 }
+    },
+    {
+        key: "taskType",
+        name: v => ({ once: "One-time", recurring: "Recurring", project: "Part of a project" })[v],
+        defaults: { once: 1, recurring: 0.95, project: 1.05 }
+    }
+];
+
+const FACTOR_TRUST = 5;   // после ~5 своих задач с этим значением личное влияние весит 50%
+
+// Значения поправок из открытого окна задачи
+function currentFactorValues() {
+    return {
+        familiarity: familiaritySelect.value || "",
+        load: getSegment(loadSegment) || "",
+        energy: getSegment(energySegment) || "",
+        taskType: taskTypeSelect.value || ""
+    };
+}
+
+// Во сколько раз поправить прогноз + объяснение по каждой поправке
+function forecastAdjustments(values, rated) {
+
+    // Ваша обычная ошибка оценки (факт / план) по всем задачам
+    const ratioOf = t => t.work.totalSeconds / 60 / t.estimateMinutes;
+    const overall = rated.length ? median(rated.map(ratioOf)) : 1;
+
+    const items = [];
+
+    FORECAST_FACTORS.forEach(f => {
+
+        const value = values[f.key];
+        if (!value || f.defaults[value] === undefined) return;
+
+        const base = f.defaults[value];
+        const same = rated.filter(t => String(t[f.key] ?? "") === String(value));
+
+        let factor = base;
+        let learned = 0;
+
+        if (same.length && overall > 0) {
+            const personal = median(same.map(ratioOf)) / overall;
+            const weight = same.length / (same.length + FACTOR_TRUST);
+            factor = weight * personal + (1 - weight) * base;
+            learned = same.length;
+        }
+
+        factor = Math.max(0.6, Math.min(1.8, factor));
+
+        if (Math.abs(factor - 1) >= 0.03) {
+            items.push({ name: f.name(value), factor, learned });
+        }
+    });
+
+    const multiplier = Math.max(0.5, Math.min(2.2, items.reduce((m, i) => m * i.factor, 1)));
+
+    return { multiplier, items };
+}
+
+function adjustmentsHtml(adj) {
+
+    if (!adj.items.length) return "";
+
+    const chips = adj.items.map(i => {
+        const sign = i.factor > 1 ? "+" : "−";
+        const pct = Math.round(Math.abs(i.factor - 1) * 100);
+        const how = i.learned ? `learned from ${i.learned} of your tasks` : "typical effect — will adapt to you over time";
+        return `<span class="factor-chip ${i.factor > 1 ? "up" : "down"}" title="${escapeHtml(how)}">${escapeHtml(i.name)} <b>${sign}${pct}%</b></span>`;
+    }).join("");
+
+    return `<div class="forecast-factors">${chips}</div>`;
+}
+
 let lastForecast = null;
 
 const confidenceNames = {
@@ -618,6 +748,8 @@ function updateForecast() {
             : result.ratio < 0.9
                 ? `On ${escapeHtml(result.label)} you usually finish faster: <strong>${times}</strong> of your plan.`
                 : `On ${escapeHtml(result.label)} your estimates are usually accurate.`;
+    } else if (result.mode === "estimate") {
+        explanation = `Your estimate, corrected for the details below. Personal accuracy kicks in after ${FORECAST_MIN_SAMPLES} finished tasks with tracked time (you have ${result.count}).`;
     } else {
         explanation = `Similar ${escapeHtml(result.label)} usually take this long. Add your own estimate for a personal correction.`;
     }
@@ -631,7 +763,8 @@ function updateForecast() {
             </div>
             <span class="confidence ${result.confidence}" title="Based on how many similar tasks you have and how stable they are">${confidenceNames[result.confidence]}</span>
         </div>
-        <div class="forecast-text">${explanation} <span>Based on ${result.count} finished tasks.</span></div>`;
+        <div class="forecast-text">${explanation}${result.mode === "estimate" ? "" : ` <span>Based on ${result.count} finished tasks.</span>`}</div>
+        ${adjustmentsHtml(result.adj)}`;
 }
 
 // Прогноз, который сохраним вместе с новой задачей
@@ -642,8 +775,8 @@ function currentForecastSnapshot() {
     return {
         minutes: Math.round(lastForecast.minutes),
         ratio: lastForecast.ratio || null,
-        basis: `${lastForecast.mode}: ${lastForecast.label}`,
+        basis: `${lastForecast.mode}: ${lastForecast.label}${lastForecast.adj && lastForecast.adj.items.length ? ` ×${lastForecast.adj.multiplier.toFixed(2)}` : ""}`.slice(0, 80),
         samples: lastForecast.count,
-        algorithm: "v1-median"
+        algorithm: "v2-median-factors"
     };
 }
