@@ -1,9 +1,9 @@
 // ========================================
-// ОТПРАВКА ПИСЕМ
+// НАДСИЛАННЯ ЛИСТІВ
 // ----------------------------------------
-// Если есть файл mail.config.json и установлен nodemailer —
-// письма уходят на настоящую почту.
-// Иначе (режим разработки) код просто печатается в терминале.
+// Якщо є файл mail.config.json і встановлено nodemailer —
+// листи йдуть на справжню пошту.
+// Інакше (режим розробки) код просто друкується в терміналі.
 // ========================================
 
 const fs = require("fs");
@@ -17,7 +17,7 @@ let fromAddress = "";
 function initMailer() {
 
     if (!fs.existsSync(configFile)) {
-        console.log("📭 mail.config.json не найден — коды будут печататься в этом терминале.");
+        console.log("📭 mail.config.json не знайдено — коди друкуватимуться в цьому терміналі.");
         return;
     }
 
@@ -26,7 +26,7 @@ function initMailer() {
     try {
         nodemailer = require("nodemailer");
     } catch (error) {
-        console.log("📭 nodemailer не установлен (npm install nodemailer) — коды будут печататься в терминале.");
+        console.log("📭 nodemailer не встановлено (npm install nodemailer) — коди друкуватимуться в терміналі.");
         return;
     }
 
@@ -46,14 +46,14 @@ function initMailer() {
 
         fromAddress = `"${config.fromName || "Task Tracker"}" <${config.user}>`;
 
-        console.log(`📬 Письма отправляются с ${config.user}`);
+        console.log(`📬 Листи надсилаються з ${config.user}`);
 
     } catch (error) {
-        console.log("📭 Ошибка в mail.config.json — коды будут печататься в терминале.", error.message);
+        console.log("📭 Помилка в mail.config.json — коди друкуватимуться в терміналі.", error.message);
     }
 }
 
-// Красивое письмо с кодом в стиле приложения
+// Гарний лист із кодом у стилі застосунку
 function codeEmailHtml(name, code, text) {
     return `
 <div style="background:#0d0f14;padding:32px 16px;font-family:Arial,Helvetica,sans-serif">
@@ -82,10 +82,10 @@ async function sendCode(user, code, purpose) {
         ? "Use this code to set a new password:"
         : "Use this code to confirm your email address:";
 
-    // Режим разработки — печатаем в терминал
+    // Режим розробки — друкуємо в термінал
     if (!transporter) {
         console.log("\n==========================================");
-        console.log(`✉️  ${isReset ? "Сброс пароля" : "Подтверждение почты"} для ${user.email}`);
+        console.log(`✉️  ${isReset ? "Скидання пароля" : "Підтвердження пошти"} для ${user.email}`);
         console.log(`    КОД: ${code}`);
         console.log("==========================================\n");
         return { delivered: false };

@@ -1,11 +1,11 @@
 // ========================================
-// ТЕМА: цвета интерфейса
+// ТЕМА: кольори інтерфейсу
 // ----------------------------------------
-// Подключается в <head>, чтобы применить сохранённые цвета
-// ещё до того, как страница нарисуется (без «вспышки» старой темы).
+// Підключається в <head>, щоб застосувати збережені кольори
+// ще до того, як сторінка намалюється (без «спалаху» старої теми).
 // ========================================
 
-// Готовые темы. null = стандартная тема из style.css
+// Готові теми. null = стандартна тема зі style.css
 const THEME_PRESETS = {
     midnight: { name: "Midnight Violet", colors: null },
     rose: { name: "Neon Rose", colors: { bg: "#120b14", panel: "#1a1020", border: "#33203a", accent: "#ff5fa2", text: "#fff4f8", muted: "#a88a9c" } },
@@ -25,7 +25,7 @@ const DEFAULT_THEME_COLORS = {
 };
 
 
-// ---------- Математика цвета ----------
+// ---------- Математика кольору ----------
 
 function hexToRgb(hex) {
     let h = String(hex || "").replace("#", "");
@@ -39,7 +39,7 @@ function rgbToHex([r, g, b]) {
     return "#" + [r, g, b].map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join("");
 }
 
-// Смешать два цвета: amount = доля второго цвета (0..1)
+// Змішати два кольори: amount = частка другого кольору (0..1)
 function mixColors(a, b, amount) {
     const x = hexToRgb(a);
     const y = hexToRgb(b);
@@ -52,9 +52,9 @@ function withAlpha(hex, alpha) {
 }
 
 
-// ---------- Применить цвета ----------
+// ---------- Застосувати кольори ----------
 
-// Из 6 основных цветов получаем все оттенки интерфейса
+// Із 6 основних кольорів отримуємо всі відтінки інтерфейсу
 function themeVariables(colors, panelOpacity = 1) {
 
     const c = { ...DEFAULT_THEME_COLORS, ...colors };
@@ -93,7 +93,7 @@ function applyThemeColors(appearance) {
     const custom = a.colors && Object.keys(a.colors).length ? a.colors : null;
     const opacity = a.panelOpacity ?? 1;
 
-    // Стандартная тема и непрозрачные панели — просто используем style.css
+    // Стандартна тема й непрозорі панелі — просто використовуємо style.css
     if (!custom && opacity >= 1) {
         Object.keys(themeVariables({})).forEach(name => root.style.removeProperty(name));
         return;
@@ -104,7 +104,7 @@ function applyThemeColors(appearance) {
     });
 }
 
-// Сразу при загрузке — из сохранённой копии
+// Одразу під час завантаження — зі збереженої копії
 try {
     applyThemeColors(JSON.parse(localStorage.getItem("appearance") || "null"));
 } catch (error) { }

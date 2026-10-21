@@ -1,20 +1,20 @@
 // ========================================
-// ГРАФИКИ И АНАЛИТИКА ПРОДУКТИВНОСТИ
+// ГРАФІКИ ТА АНАЛІТИКА ПРОДУКТИВНОСТІ
 // ----------------------------------------
-// Settings → Productivity (видно только когда анализ включён).
-// Всё считается по реальным рабочим сессиям (метки начала и конца).
-// Длительность работы ≠ продуктивность: показываем факты, а не «оценку человека».
+// Settings → Productivity (видно лише коли аналіз увімкнено).
+// Усе рахується за реальними робочими сесіями (мітки початку та кінця).
+// Тривалість роботи ≠ продуктивність: показуємо факти, а не «оцінку людини».
 // ========================================
 
-// Цвета категорий: проверенная палитра для тёмного фона (порядок важен —
-// соседние цвета различимы и при нарушениях цветового зрения).
-// Цвет закреплён за категорией по её месту в списке, а не по рангу на графике.
+// Кольори категорій: перевірена палітра для темного фону (порядок важливий —
+// сусідні кольори розрізняються і при порушеннях кольорового зору).
+// Колір закріплений за категорією за її місцем у списку, а не за рангом на графіку.
 const CHART_COLORS = ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"];
 const OTHER_COLOR = "#6b7180";
 
 const analyticsState = {
     mode: "week",           // day | week | month
-    anchor: new Date(),     // какой период показываем
+    anchor: new Date(),     // який період показуємо
     sessions: []
 };
 
@@ -25,7 +25,7 @@ const chartTooltip = document.querySelector("#chartTooltip");
 
 
 // ========================================
-// ЗАГРУЗКА И ПЕРИОДЫ
+// ЗАВАНТАЖЕННЯ ТА ПЕРІОДИ
 // ========================================
 
 function analyticsVisible() {
@@ -142,10 +142,10 @@ window.addEventListener("resize", () => {
 
 
 // ========================================
-// ДАННЫЕ
+// ДАНІ
 // ========================================
 
-// Категории для графиков: первые 8 по порядку в вашем списке, остальные → «Other»
+// Категорії для графіків: перші 8 за порядком у вашому списку, решта → «Other»
 function chartCategories() {
 
     const names = categories.map(c => c.name);
@@ -168,14 +168,14 @@ function sessionEnd(s) {
     return s.endedAt ? new Date(s.endedAt) : new Date(serverNow());
 }
 
-// Секунды пересечения двух интервалов
+// Секунди перетину двох інтервалів
 function overlapSeconds(aStart, aEnd, bStart, bEnd) {
     const start = Math.max(aStart, bStart);
     const end = Math.min(aEnd, bEnd);
     return Math.max(0, (end - start) / 1000);
 }
 
-// Разложить активное время сессий по столбикам периода и категориям
+// Розкласти активний час сесій по стовпчиках періоду та категоріях
 function bucketize(range, sessions, cats) {
 
     const keys = [...cats.list.map(c => c.name), "Other"];
@@ -209,10 +209,10 @@ function collectAnalytics() {
         .filter(s => s.start < range.end && s.end > range.start)
         .sort((a, b) => a.start - b.start);
 
-    // ---------- Активное время по категориям в каждом столбике ----------
+    // ---------- Активний час за категоріями в кожному стовпчику ----------
     const { buckets, usedKeys, totalSeconds } = bucketize(range, inRange, cats);
 
-    // ---------- Задачи периода ----------
+    // ---------- Задачі періоду ----------
     const inPeriod = d => d && new Date(d) >= range.start && new Date(d) < range.end;
     const taskIdsWithWork = new Set(inRange.map(s => s.taskId));
 
@@ -227,7 +227,7 @@ function collectAnalytics() {
 
 
 // ========================================
-// ГЛАВНАЯ ПЕРЕРИСОВКА
+// ГОЛОВНЕ ПЕРЕМАЛЬОВУВАННЯ
 // ========================================
 
 function renderAnalytics() {
@@ -250,7 +250,7 @@ function renderAnalytics() {
 
 
 // ========================================
-// КАРТОЧКИ-ЦИФРЫ
+// КАРТКИ-ЦИФРИ
 // ========================================
 
 function renderTiles(data) {
@@ -274,11 +274,11 @@ function renderTiles(data) {
 
 
 // ========================================
-// ГРАФИК: активное время по категориям (столбики с накоплением)
+// ГРАФІК: активний час за категоріями (стовпчики з накопиченням)
 // ========================================
 
 function niceStep(max) {
-    // Шаг сетки в минутах: 5, 10, 15, 30, 60, 120...
+    // Крок сітки в хвилинах: 5, 10, 15, 30, 60, 120...
     const steps = [5, 10, 15, 30, 60, 120, 180, 240, 360, 480, 720];
     const target = max / 4;
     return steps.find(s => s >= target) || 720;
@@ -319,13 +319,13 @@ function renderActivityChart(data) {
 
     let svg = `<svg width="${width}" height="${height}" role="img" aria-label="Active time by category">`;
 
-    // Сетка и подписи оси
+    // Сітка й підписи осі
     for (let m = 0; m <= top; m += step) {
         svg += `<line class="grid" x1="${pad.left}" x2="${width - pad.right}" y1="${y(m)}" y2="${y(m)}"/>`;
         svg += `<text class="axis" x="${pad.left - 8}" y="${y(m) + 4}" text-anchor="end">${fmtAxis(m)}</text>`;
     }
 
-    // Подписи по оси X — не все, если их много
+    // Підписи по осі X — не всі, якщо їх багато
     const every = n > 24 ? 3 : n > 14 ? 2 : 1;
 
     data.buckets.forEach((bucket, i) => {
@@ -333,7 +333,7 @@ function renderActivityChart(data) {
         const cx = pad.left + slot * i + slot / 2;
         let base = 0;
 
-        // Сегменты снизу вверх в постоянном порядке категорий
+        // Сегменти знизу вгору в постійному порядку категорій
         const segs = data.usedKeys.filter(k => bucket.values[k] > 0);
 
         segs.forEach((key, j) => {
@@ -347,14 +347,14 @@ function renderActivityChart(data) {
             const color = data.cats.colorOf(key);
 
             if (isTop && h > 4) {
-                // Верхний сегмент со скруглённым верхом
+                // Верхній сегмент із заокругленим верхом
                 const r = Math.min(4, barW / 2, h);
                 svg += `<path fill="${color}" d="M${x},${y0} V${y1 + r} Q${x},${y1} ${x + r},${y1} H${x + barW - r} Q${x + barW},${y1} ${x + barW},${y1 + r} V${y0} Z"/>`;
             } else {
                 svg += `<rect fill="${color}" x="${x}" y="${y1}" width="${barW}" height="${h}"/>`;
             }
 
-            // 2px зазор между сегментами цвета фона
+            // 2px проміжок між сегментами кольору фону
             if (j > 0) {
                 svg += `<line class="seg-gap" x1="${x}" x2="${x + barW}" y1="${y0}" y2="${y0}"/>`;
             }
@@ -366,7 +366,7 @@ function renderActivityChart(data) {
             svg += `<text class="axis" x="${cx}" y="${height - 8}" text-anchor="middle">${bucket.label}</text>`;
         }
 
-        // Невидимая зона наведения на весь столбец
+        // Невидима зона наведення на весь стовпчик
         svg += `<rect class="hit" data-bucket="${i}" x="${pad.left + slot * i}" y="${pad.top}" width="${slot}" height="${plotH}"/>`;
     });
 
@@ -375,7 +375,7 @@ function renderActivityChart(data) {
 
     box.innerHTML = svg;
 
-    // Подсказка при наведении
+    // Підказка під час наведення
     box.querySelectorAll(".hit").forEach(hit => {
 
         const bucket = data.buckets[Number(hit.dataset.bucket)];
@@ -394,13 +394,13 @@ function renderActivityChart(data) {
         hit.addEventListener("mouseleave", hideChartTooltip);
     });
 
-    // Легенда (≥ 2 категорий) с итогами
+    // Легенда (≥ 2 категорій) з підсумками
     legend.innerHTML = data.usedKeys.map(k => {
         const sec = data.buckets.reduce((sum, b) => sum + b.values[k], 0);
         return `<span><i style="background:${data.cats.colorOf(k)}"></i>${escapeHtml(k)} <b>${formatMinutes(sec / 60)}</b></span>`;
     }).join("");
 
-    // Таблица (доступность)
+    // Таблиця (доступність)
     table.innerHTML = `
         <table class="data-table">
             <thead><tr><th>Period</th>${data.usedKeys.map(k => `<th>${escapeHtml(k)}</th>`).join("")}<th>Total</th></tr></thead>
@@ -412,12 +412,12 @@ function renderActivityChart(data) {
 
 
 // ========================================
-// ГРАФИК-ЛИНИЯ: тренд активного времени по категориям
+// ГРАФІК-ЛІНІЯ: тренд активного часу за категоріями
 // ========================================
 
 const hiddenTrendSeries = new Set();
 
-// У графика тренда свои настройки — независимо от остальных графиков
+// У графіка тренду свої налаштування — незалежно від інших графіків
 const trendState = {
     mode: "week",           // day | week | month
     anchor: new Date(),
@@ -463,7 +463,7 @@ setupTrendControls();
 
 let lastAnalyticsData = null;
 
-// Плавная кривая без «выбросов» ниже нуля (монотонная интерполяция Фрича–Карлсона)
+// Плавна крива без «викидів» нижче нуля (монотонна інтерполяція Фріча–Карлсона)
 function smoothPath(points) {
 
     if (points.length < 2) return "";
@@ -518,7 +518,7 @@ function renderTrendChart(source) {
     const box = document.querySelector("#trendChart");
     const legend = document.querySelector("#trendLegend");
 
-    // Свой период для этого графика
+    // Свій період для цього графіка
     const range = periodRange(trendState.mode, trendState.anchor);
     const inRange = source.sessions.filter(s => s.start < range.end && s.end > range.start);
     const bucketed = bucketize(range, inRange, source.cats);
@@ -528,7 +528,7 @@ function renderTrendChart(source) {
     document.querySelector("#trendLabel").textContent = periodTitle(range, trendState.mode);
     document.querySelector("#trendNext").disabled = range.end > new Date(serverNow());
 
-    // «Total» — одна линия: сумма всех категорий
+    // «Total» — одна лінія: сума всіх категорій
     const isTotal = trendState.split === "total";
 
     const data = {
@@ -578,7 +578,7 @@ function renderTrendChart(source) {
         }
     });
 
-    // Мягкая заливка под линиями + сами линии
+    // М'яка заливка під лініями + самі лінії
     visible.forEach(key => {
         const color = data.cats.colorOf(key);
         const pts = data.buckets.map((b, i) => [x(i), y(b.values[key] / 60)]);
@@ -596,7 +596,7 @@ function renderTrendChart(source) {
             <path class="trend-line" d="${line}" stroke="${color}"/>`;
     });
 
-    // Слой наведения: вертикальная линия, точки, подпись над точкой
+    // Шар наведення: вертикальна лінія, точки, підпис над точкою
     svg += `<line class="crosshair" id="trendCross" x1="0" x2="0" y1="${pad.top - 8}" y2="${y(0)}"/>`;
     svg += `<g id="trendDots"></g>`;
     svg += `<g id="trendBadge" class="trend-badge" style="display:none">
@@ -628,7 +628,7 @@ function renderTrendChart(source) {
             `<circle cx="${cx}" cy="${y(bucket.values[k] / 60)}" r="5" fill="${data.cats.colorOf(k)}" class="trend-dot"/>`
         ).join("");
 
-        // Подпись над самой высокой точкой — как на образце
+        // Підпис над найвищою точкою — як на зразку
         const topKey = visible.reduce((best, k) => bucket.values[k] > bucket.values[best] ? k : best, visible[0]);
         const topY = y(bucket.values[topKey] / 60);
         const visibleTotal = visible.reduce((sum, k) => sum + bucket.values[k], 0);
@@ -648,13 +648,13 @@ function renderTrendChart(source) {
         title.setAttribute("x", w / 2);
         sub.setAttribute("x", w / 2);
 
-        // Подробности по категориям — в обычной подсказке
+        // Подробиці за категоріями — у звичайній підказці
         const rows = visible
             .filter(k => bucket.values[k] > 0)
             .map(k => `<div class="tt-row"><i style="background:${data.cats.colorOf(k)}"></i>${escapeHtml(k)}<b>${formatMinutes(bucket.values[k] / 60)}</b></div>`)
             .join("");
 
-        // Для одной линии хватает подписи над точкой; для категорий — подробности ниже курсора
+        // Для однієї лінії вистачає підпису над точкою; для категорій — подробиці нижче курсора
         if (rows && !isTotal && visible.length > 1) {
             showChartTooltip(event, `<div class="tt-title">${bucket.title}</div>${rows}`, 40);
         } else {
@@ -678,7 +678,7 @@ function renderTrendChart(source) {
 
     hit.addEventListener("mouseleave", hide);
 
-    // Легенда-переключатель (для одной линии «Total» — просто подпись с итогом)
+    // Легенда-перемикач (для однієї лінії «Total» — просто підпис із підсумком)
     if (isTotal) {
         legend.innerHTML = `<span><i style="background:${data.cats.colorOf()}"></i>All categories <b>${formatMinutes(bucketed.totalSeconds / 60)}</b></span>`;
         return;
@@ -693,7 +693,7 @@ function renderTrendChart(source) {
         button.addEventListener("click", () => {
             const key = button.dataset.key;
 
-            // Последнюю видимую линию не прячем
+            // Останню видиму лінію не ховаємо
             if (!hiddenTrendSeries.has(key) && visible.length === 1) return;
 
             hiddenTrendSeries.has(key) ? hiddenTrendSeries.delete(key) : hiddenTrendSeries.add(key);
@@ -704,7 +704,7 @@ function renderTrendChart(source) {
 
 
 // ========================================
-// КАК ВЫ РАБОТАЕТЕ: переключения, паузы, параллельные задачи
+// ЯК ВИ ПРАЦЮЄТЕ: перемикання, паузи, паралельні задачі
 // ========================================
 
 const MIN_OBSERVATIONS = 3;
@@ -728,8 +728,8 @@ function renderWorkStyle(data) {
     const sessions = data.inRange;
     const byId = new Map(tasks.map(t => [t.id, t]));
 
-    // ---------- 1. Переключения между задачами ----------
-    // Переключение = следующая сессия по другой задаче, когда предыдущая ещё не завершена
+    // ---------- 1. Перемикання між задачами ----------
+    // Перемикання = наступна сесія по іншій задачі, коли попередня ще не завершена
     let switches = 0;
     for (let i = 1; i < sessions.length; i++) {
         const prev = sessions[i - 1];
@@ -740,8 +740,8 @@ function renderWorkStyle(data) {
         if (!prevDone) switches++;
     }
 
-    // Задачи, завершённые в периоде и имеющие сессии: сделаны «за один заход»
-    // (между их первой и последней сессией не было сессий других задач)?
+    // Задачі, завершені в періоді й мають сесії: зроблені «за один підхід»
+    // (між їхньою першою та останньою сесією не було сесій інших задач)?
     const completedWithWork = data.completed.filter(t => data.sessions.some(s => s.taskId === t.id));
 
     const focused = completedWithWork.filter(task => {
@@ -767,7 +767,7 @@ function renderWorkStyle(data) {
         focusText = "A mixed style: some tasks in one go, others in parallel pieces.";
     }
 
-    // ---------- 2. Паузы ----------
+    // ---------- 2. Паузи ----------
     const perTask = new Map();
     sessions.forEach(s => perTask.set(s.taskId, (perTask.get(s.taskId) || []).concat(s)));
 
@@ -793,15 +793,15 @@ function renderWorkStyle(data) {
           (breaks.length ? ` · typical break: ${formatMinutes(median(breaks))}` : " · no breaks recorded")
         : "";
 
-    // ---------- 3. Сколько задач «в процессе» одновременно ----------
-    // Задача открыта с первого старта до завершения (или до сейчас)
+    // ---------- 3. Скільки задач «в процесі» одночасно ----------
+    // Задача відкрита від першого старту до завершення (або до зараз)
     const now = new Date(serverNow());
     const intervals = tasks
         .filter(t => t.firstStartedAt)
         .map(t => ({ start: new Date(t.firstStartedAt), end: t.completedAt ? new Date(t.completedAt) : now }))
         .filter(iv => iv.start < data.range.end && iv.end > data.range.start);
 
-    // Сколько задач было «в процессе» в каждый день периода (только прошедшие дни)
+    // Скільки задач було «в процесі» в кожен день періоду (лише минулі дні)
     const days = analyticsState.mode === "day"
         ? [{ start: data.range.start, end: data.range.end }]
         : data.range.buckets.filter(b => b.start <= now);
@@ -835,8 +835,8 @@ function renderWorkStyle(data) {
 
 
 // ========================================
-// БАЛАНС ЖИЗНИ: кольцевая диаграмма по категориям
-// Яркая часть сектора — доля выполненных задач в этой сфере
+// БАЛАНС ЖИТТЯ: кільцева діаграма за категоріями
+// Яскрава частина сектора — частка виконаних задач у цій сфері
 // ========================================
 
 function arcPath(cx, cy, rOuter, rInner, a0, a1) {
@@ -861,7 +861,7 @@ function renderBalance(data) {
         return;
     }
 
-    // Группы по категориям в постоянном порядке
+    // Групи за категоріями в постійному порядку
     const groups = new Map();
     list.forEach(t => {
         const key = data.cats.keyOf(t.category || "Development");
@@ -878,7 +878,7 @@ function renderBalance(data) {
     const doneTotal = slices.reduce((s, g) => s + g.done, 0);
 
     const size = 220, cx = size / 2, cy = size / 2, rO = 100, rI = 62;
-    const gap = slices.length > 1 ? 0.025 : 0;     // зазор между секторами
+    const gap = slices.length > 1 ? 0.025 : 0;     // проміжок між секторами
     let angle = 0;
     let svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="Tasks by life area">`;
 
@@ -890,14 +890,14 @@ function renderBalance(data) {
         const color = data.cats.colorOf(g.key);
 
         if (sweep >= Math.PI * 2 - 0.001) {
-            // Один сектор на весь круг — рисуем двумя половинами
+            // Один сектор на все коло — малюємо двома половинами
             svg += `<path class="slice-dim" fill="${color}" d="${arcPath(cx, cy, rO, rI, 0, Math.PI)}"/>`;
             svg += `<path class="slice-dim" fill="${color}" d="${arcPath(cx, cy, rO, rI, Math.PI, Math.PI * 2 - 0.0001)}"/>`;
         } else {
             svg += `<path class="slice-dim" fill="${color}" d="${arcPath(cx, cy, rO, rI, a0, a1)}"/>`;
         }
 
-        // Яркая заливка = доля выполненных
+        // Яскрава заливка = частка виконаних
         if (g.done) {
             const doneEnd = a0 + (a1 - a0) * (g.done / g.total);
             const half = a0 + Math.min(Math.PI, doneEnd - a0);
@@ -905,7 +905,7 @@ function renderBalance(data) {
             if (doneEnd > half) svg += `<path fill="${color}" d="${arcPath(cx, cy, rO, rI, half, doneEnd)}"/>`;
         }
 
-        // Зона наведения
+        // Зона наведення
         svg += `<path class="slice-hit" data-slice="${i}" d="${arcPath(cx, cy, rO + 4, rI - 4, a0, Math.max(a0 + 0.01, a1))}"/>`;
 
         angle += sweep;
@@ -946,7 +946,7 @@ function renderBalance(data) {
 
 
 // ========================================
-// ПОДСКАЗКА
+// ПІДКАЗКА
 // ========================================
 
 function showChartTooltip(event, html, extraY = 0) {

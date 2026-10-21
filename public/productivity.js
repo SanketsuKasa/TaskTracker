@@ -1,16 +1,16 @@
 // ========================================
-// АНАЛИЗ ПРОДУКТИВНОСТИ (интерфейс)
+// АНАЛІЗ ПРОДУКТИВНОСТІ (інтерфейс)
 // ----------------------------------------
-// Работает только когда в Settings → Productivity включена галочка.
-// Файл подключается ДО app.js: здесь только функции и обработчики,
-// функции из app.js (api, render, tasks...) вызываются позже, во время работы.
+// Працює лише коли в Settings → Productivity увімкнено галочку.
+// Файл підключається ДО app.js: тут лише функції та обробники,
+// функції з app.js (api, render, tasks...) викликаються пізніше, під час роботи.
 // ========================================
 
 let productivityOn = false;
-let serverOffsetMs = 0;             // разница между часами сервера и компьютера
+let serverOffsetMs = 0;             // різниця між годинником сервера та комп'ютера
 
-const STALE_HOURS = 3;              // через сколько часов спросить «вы всё ещё работаете?»
-const FORECAST_MIN_SAMPLES = 3;     // сколько выполненных задач нужно для прогноза
+const STALE_HOURS = 3;              // через скільки годин запитати «ви ще працюєте?»
+const FORECAST_MIN_SAMPLES = 3;     // скільки виконаних задач потрібно для прогнозу
 
 const difficultyNames = {
     1: "Very easy",
@@ -28,7 +28,7 @@ const priorityNames = {
 
 
 // ========================================
-// ВКЛ / ВЫКЛ
+// УВІМК / ВИМК
 // ========================================
 
 const productivityToggle = document.querySelector("#productivityToggle");
@@ -44,10 +44,10 @@ function applyProductivityMode(on) {
     document.querySelector("#deadlineLabel").textContent =
         productivityOn ? "External deadline (optional)" : "Deadline";
 
-    // Если открыта страница с графиками — сразу показываем их
+    // Якщо відкрита сторінка з графіками — одразу показуємо їх
     if (productivityOn && typeof loadAnalytics === "function") loadAnalytics();
 
-    // Неоновый график на фоне работает только вместе с анализом
+    // Неоновий графік на фоні працює лише разом з аналізом
     if (typeof updateGlow === "function") {
         updateGlow();
         if (appearanceLoaded) fillAppearanceForm();
@@ -90,7 +90,7 @@ productivityToggle.addEventListener("change", async () => {
 
 
 // ========================================
-// ВРЕМЯ
+// ЧАС
 // ========================================
 
 function serverNow() {
@@ -102,7 +102,7 @@ function syncServerTime(response) {
     if (header) serverOffsetMs = new Date(header).getTime() - Date.now();
 }
 
-// Активное время задачи: сумма закрытых сессий + текущая (по меткам времени)
+// Активний час задачі: сума закритих сесій + поточна (за мітками часу)
 function activeSecondsOf(task) {
 
     const work = task.work || {};
@@ -145,14 +145,14 @@ function formatDateTime(value) {
 
 
 // ========================================
-// КАРТОЧКА ЗАДАЧИ
+// КАРТКА ЗАДАЧІ
 // ========================================
 
 function starsText(n) {
     return "★".repeat(n) + "☆".repeat(5 - n);
 }
 
-// Подпись под статусом: «Working now» / «Paused»
+// Підпис під статусом: «Working now» / «Paused»
 function workStateHtml(task) {
 
     if (!productivityOn || task.status !== "progress") return "";
@@ -173,7 +173,7 @@ function isStale(task) {
     return serverNow() - since > STALE_HOURS * 3600 * 1000;
 }
 
-// Дополнительная строка на карточке: сложность, приоритет, время, кнопки
+// Додатковий рядок на картці: складність, пріоритет, час, кнопки
 function productivityRowHtml(task) {
 
     if (!productivityOn) return "";
@@ -190,7 +190,7 @@ function productivityRowHtml(task) {
         parts.push(`<span class="priority-badge ${task.priority}">${priorityNames[task.priority]} priority</span>`);
     }
 
-    // Время: «0:42:10 / est 1h»
+    // Час: «0:42:10 / est 1h»
     if (seconds || running || task.estimateMinutes) {
 
         let text = `<span class="${running ? "live-timer running" : "live-timer"}" data-timer="${task.id}">${formatClock(seconds)}</span>`;
@@ -198,7 +198,7 @@ function productivityRowHtml(task) {
         if (task.estimateMinutes) {
             text += ` <span class="estimate">/ est ${formatMinutes(task.estimateMinutes)}</span>`;
 
-            // Для выполненных — насколько ошиблись с оценкой
+            // Для виконаних — наскільки помилилися з оцінкою
             if (task.status === "done" && seconds >= 60) {
                 const diff = Math.round((seconds / 60 / task.estimateMinutes - 1) * 100);
                 const cls = Math.abs(diff) <= 15 ? "good" : diff > 0 ? "over" : "under";
@@ -217,7 +217,7 @@ function productivityRowHtml(task) {
         parts.push(`<span class="planned-finish" title="Planned finish">🎯 ${formatDateTime(task.plannedFinishAt)}</span>`);
     }
 
-    // Кнопки — только те, что подходят к состоянию задачи
+    // Кнопки — лише ті, що підходять до стану задачі
     let buttons = "";
 
     if (task.status === "todo") {
@@ -234,7 +234,7 @@ function productivityRowHtml(task) {
         buttons = `<button type="button" class="work-btn reopen" data-action="reopen" title="Open again — history is kept">↺ Reopen</button>`;
     }
 
-    // «Таймер идёт уже 5 часов — вы правда работали?»
+    // «Таймер іде вже 5 годин — ви справді працювали?»
     let staleHtml = "";
 
     if (isStale(task)) {
@@ -285,7 +285,7 @@ function bindProductivityRow(card, task) {
         });
     });
 
-    // Подставляем в «I stopped at» время начала + 1 час как подсказку
+    // Підставляємо в «I stopped at» час початку + 1 година як підказку
     const staleTime = card.querySelector(".stale-time");
 
     if (staleTime) {
@@ -332,7 +332,7 @@ async function workAction(task, action, extra = {}) {
         Object.assign(task, updated);
         render();
 
-        // Обновить неоновый график на фоне
+        // Оновити неоновий графік на фоні
         if (typeof refreshGlowData === "function") refreshGlowData();
 
         if (action === "finish") {
@@ -348,7 +348,7 @@ async function workAction(task, action, extra = {}) {
     }
 }
 
-// Живой таймер: каждую секунду обновляем только текст, сами данные — из меток времени
+// Живий таймер: щосекунди оновлюємо лише текст, самі дані — з міток часу
 setInterval(() => {
 
     if (!productivityOn) return;
@@ -362,7 +362,7 @@ setInterval(() => {
 
 
 // ========================================
-// ОКНО ЗАДАЧИ: звёзды, приоритет, оценка, прогноз
+// ВІКНО ЗАДАЧІ: зірки, пріоритет, оцінка, прогноз
 // ========================================
 
 const difficultyStars = document.querySelector("#difficultyStars");
@@ -400,10 +400,10 @@ difficultyStars.querySelectorAll("button").forEach(button => {
 
     const value = Number(button.dataset.value);
 
-    // Повторный клик по той же звезде — снять оценку
+    // Повторний клік по тій самій зірці — зняти оцінку
     button.addEventListener("click", () => setDifficulty(formDifficulty === value ? null : value));
 
-    // Подсветка при наведении
+    // Підсвічування під час наведення
     button.addEventListener("mouseenter", () => {
         difficultyStars.querySelectorAll("button").forEach(b => {
             b.classList.toggle("hover", Number(b.dataset.value) <= value);
@@ -415,7 +415,7 @@ difficultyStars.addEventListener("mouseleave", () => {
     difficultyStars.querySelectorAll("button").forEach(b => b.classList.remove("hover"));
 });
 
-// Сегментные кнопки (приоритет, энергия, нагрузка). allowEmpty — можно снять выбор
+// Сегментні кнопки (пріоритет, енергія, навантаження). allowEmpty — можна зняти вибір
 function setupSegment(segment, allowEmpty) {
 
     segment.querySelectorAll("button").forEach(button => {
@@ -452,7 +452,7 @@ function readEstimateMinutes() {
     return total > 0 ? Math.round(total) : null;
 }
 
-// Заполнить поля при открытии окна (task = null для новой задачи)
+// Заповнити поля під час відкриття вікна (task = null для нової задачі)
 function productivityFillForm(task) {
 
     const t = task || {};
@@ -470,13 +470,13 @@ function productivityFillForm(task) {
     plannedStartInput.value = t.plannedStartAt || "";
     familiaritySelect.value = t.familiarity || "";
 
-    // Кнопка «Вернуть в Не начато» — только для начатых задач
+    // Кнопка «Повернути в Не почато» — лише для розпочатих задач
     resetWorkButton.style.display = productivityOn && task && task.status !== "todo" ? "" : "none";
 
     updateForecast();
 }
 
-// Прочитать поля для сохранения (только если анализ включён)
+// Прочитати поля для збереження (лише якщо аналіз увімкнено)
 function productivityReadForm() {
 
     if (!productivityOn) return {};
@@ -506,9 +506,9 @@ resetWorkButton.addEventListener("click", async () => {
 // ========================================
 // ПРОГНОЗ
 // ----------------------------------------
-// Сравниваем вашу оценку времени с реальным активным временем по выполненным задачам.
-// Коэффициент = факт / оценка. Берём медиану по самым похожим задачам:
-// та же категория и сложность → та же категория → та же сложность → все задачи.
+// Порівнюємо вашу оцінку часу з реальним активним часом за виконаними задачами.
+// Коефіцієнт = факт / оцінка. Беремо медіану за найсхожішими задачами:
+// та сама категорія і складність → та сама категорія → та сама складність → усі задачі.
 // ========================================
 
 function median(values) {
@@ -531,7 +531,7 @@ function forecastFor(category, difficulty, estimateMinutes) {
         return { ...base, baseMinutes: base.minutes, minutes: base.minutes * adj.multiplier, adj };
     }
 
-    // Истории ещё мало, но есть ваша оценка и поправки — уже можно уточнить оценку
+    // Історії ще мало, але є ваша оцінка й поправки — вже можна уточнити оцінку
     if (estimateMinutes && adj.items.length) {
         return {
             ready: true,
@@ -556,7 +556,7 @@ function baseForecastFor(category, difficulty, estimateMinutes) {
         (!editingTask || t.id !== editingTask.id)
     );
 
-    // Задачи, где была и оценка, и замеренное время — для коэффициента ошибки
+    // Задачі, де була і оцінка, і заміряний час — для коефіцієнта помилки
     const rated = finished.filter(t => t.estimateMinutes > 0);
 
     const groupsFor = list => [
@@ -566,7 +566,7 @@ function baseForecastFor(category, difficulty, estimateMinutes) {
         { label: "all your tasks", list }
     ];
 
-    // Уверенность: сколько примеров и насколько они разбросаны
+    // Впевненість: скільки прикладів і наскільки вони розкидані
     function confidence(values) {
         const sorted = [...values].sort((a, b) => a - b);
         const q = p => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))];
@@ -576,7 +576,7 @@ function baseForecastFor(category, difficulty, estimateMinutes) {
         return "low";
     }
 
-    // 1) Есть ваша оценка → корректируем её вашим личным коэффициентом
+    // 1) Є ваша оцінка → коригуємо її вашим особистим коефіцієнтом
     if (estimateMinutes) {
 
         const group = groupsFor(rated).find(g => g.list.length >= FORECAST_MIN_SAMPLES);
@@ -599,7 +599,7 @@ function baseForecastFor(category, difficulty, estimateMinutes) {
         };
     }
 
-    // 2) Оценки нет → сколько обычно длятся похожие выполненные задачи
+    // 2) Оцінки немає → скільки зазвичай тривають схожі виконані задачі
     const group = groupsFor(finished).find(g => g.list.length >= FORECAST_MIN_SAMPLES);
 
     if (!group) {
@@ -619,11 +619,11 @@ function baseForecastFor(category, difficulty, estimateMinutes) {
 }
 
 // ========================================
-// ПОПРАВКИ ПРОГНОЗА: энергия, нагрузка недели, знакомство с задачей, тип задачи
+// ПОПРАВКИ ПРОГНОЗУ: енергія, навантаження тижня, знайомство із задачею, тип задачі
 // ----------------------------------------
-// У каждой поправки есть «обычное» влияние (DEFAULT). Как только накопится история,
-// оно постепенно заменяется ВАШИМ личным: смотрим, во сколько раз вы ошибались
-// в задачах с таким же значением по сравнению с остальными.
+// У кожної поправки є «звичайний» вплив (DEFAULT). Щойно накопичиться історія,
+// він поступово замінюється ВАШИМ особистим: дивимося, у скільки разів ви помилялися
+// у задачах із таким самим значенням порівняно з рештою.
 // ========================================
 
 const FORECAST_FACTORS = [
@@ -649,9 +649,9 @@ const FORECAST_FACTORS = [
     }
 ];
 
-const FACTOR_TRUST = 5;   // после ~5 своих задач с этим значением личное влияние весит 50%
+const FACTOR_TRUST = 5;   // після ~5 своїх задач із цим значенням особистий вплив важить 50%
 
-// Значения поправок из открытого окна задачи
+// Значення поправок із відкритого вікна задачі
 function currentFactorValues() {
     return {
         familiarity: familiaritySelect.value || "",
@@ -661,10 +661,10 @@ function currentFactorValues() {
     };
 }
 
-// Во сколько раз поправить прогноз + объяснение по каждой поправке
+// У скільки разів поправити прогноз + пояснення до кожної поправки
 function forecastAdjustments(values, rated) {
 
-    // Ваша обычная ошибка оценки (факт / план) по всем задачам
+    // Ваша звичайна помилка оцінки (факт / план) за всіма задачами
     const ratioOf = t => t.work.totalSeconds / 60 / t.estimateMinutes;
     const overall = rated.length ? median(rated.map(ratioOf)) : 1;
 
@@ -767,7 +767,7 @@ function updateForecast() {
         ${adjustmentsHtml(result.adj)}`;
 }
 
-// Прогноз, который сохраним вместе с новой задачей
+// Прогноз, який збережемо разом із новою задачею
 function currentForecastSnapshot() {
 
     if (!lastForecast || editingTask) return null;

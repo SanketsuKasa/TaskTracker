@@ -1,8 +1,8 @@
 // ========================================
-// АНАЛИЗ ПРОДУКТИВНОСТИ: рабочие сессии и журнал событий
+// АНАЛІЗ ПРОДУКТИВНОСТІ: робочі сесії та журнал подій
 // ----------------------------------------
-// worksessions.json — когда реально работали над задачей
-// events.json       — что и когда менялось в плане (ничего не перезаписывается)
+// worksessions.json — коли реально працювали над задачею
+// events.json       — що і коли змінювалося в плані (нічого не перезаписується)
 // ========================================
 
 const { readJson, writeJson } = require("./storage");
@@ -18,10 +18,10 @@ function newId(prefix) {
 
 
 // ========================================
-// СОБЫТИЯ
+// ПОДІЇ
 // ========================================
 
-// Записать одно или несколько событий: [{ type, data }]
+// Записати одну або кілька подій: [{ type, data }]
 function logEvents(userId, taskId, list) {
 
     if (!list.length) return;
@@ -50,7 +50,7 @@ function getEvents(userId, taskId) {
 
 
 // ========================================
-// РАБОЧИЕ СЕССИИ
+// РОБОЧІ СЕСІЇ
 // ========================================
 
 function readSessions() {
@@ -86,7 +86,7 @@ function closeSession(session, endTime = new Date(), note = "") {
     if (note) session.note = note;
 }
 
-// Итог по задаче: время считается по меткам начала и конца, а не по таймеру браузера
+// Підсумок по задачі: час рахується за мітками початку та кінця, а не за таймером браузера
 function summaryOf(own) {
 
     const active = own.find(s => s.status === "active");
@@ -101,8 +101,8 @@ function summaryOf(own) {
     };
 }
 
-// Сессии, сгруппированные по задачам. Считается один раз на массив сессий,
-// а не заново для каждой задачи (список задач грузится быстро даже при большой истории)
+// Сесії, згруповані за задачами. Рахується один раз на масив сесій,
+// а не заново для кожної задачі (список задач вантажиться швидко навіть із великою історією)
 const groupedCache = new WeakMap();
 
 function sessionsByTask(sessions) {
@@ -132,7 +132,7 @@ function withWork(task, sessions) {
 
 
 // ========================================
-// ПОЛЯ ПЛАНА (сложность, оценка, сроки...)
+// ПОЛЯ ПЛАНУ (складність, оцінка, терміни...)
 // ========================================
 
 const DATETIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
@@ -180,7 +180,7 @@ const FIELD_NAMES = {
     familiarity: "знакомство с задачей"
 };
 
-// Проверяет только переданные поля. Возвращает { values } или бросает ошибку
+// Перевіряє лише передані поля. Повертає { values } або кидає помилку
 function parsePlanFields(body) {
 
     const values = {};
@@ -197,7 +197,7 @@ function parsePlanFields(body) {
     return values;
 }
 
-// Какие изменения плана записываем в журнал
+// Які зміни плану записуємо в журнал
 const TRACKED_CHANGES = {
     estimateMinutes: "estimate_changed",
     plannedFinishAt: "planned_finish_changed",
@@ -207,7 +207,7 @@ const TRACKED_CHANGES = {
     priority: "priority_changed"
 };
 
-// Сравнить старые и новые значения, вернуть события об изменениях
+// Порівняти старі й нові значення, повернути події про зміни
 function planChangeEvents(before, after) {
 
     const list = [];
@@ -225,7 +225,7 @@ function planChangeEvents(before, after) {
     return list;
 }
 
-// Снимок первоначального плана — не меняется никогда
+// Знімок початкового плану — не змінюється ніколи
 function initialPlan(task) {
     return {
         estimateMinutes: task.estimateMinutes ?? null,
@@ -242,7 +242,7 @@ function initialPlan(task) {
 // КНОПКИ: Почати / Призупинити / Продовжити / Завершити
 // ========================================
 
-// Меняет task и sessions. Возвращает { events } или { error, code }
+// Змінює task і sessions. Повертає { events } або { error, code }
 function applyWorkAction(task, sessions, action, body = {}) {
 
     const now = new Date();
@@ -319,7 +319,7 @@ function applyWorkAction(task, sessions, action, body = {}) {
 
         case "reset": {
 
-            // Вернуть в «Не начато». История сессий остаётся
+            // Повернути в «Не почато». Історія сесій залишається
             if (active) closeSession(active, now);
 
             task.status = "todo";
@@ -346,7 +346,7 @@ function applyWorkAction(task, sessions, action, body = {}) {
 
         case "confirm": {
 
-            // «Да, я всё это время работал(а)»
+            // «Так, я весь цей час працював(ла)»
             if (!active) {
                 return { error: "Нет активной сессии", code: 409 };
             }
@@ -358,7 +358,7 @@ function applyWorkAction(task, sessions, action, body = {}) {
 
         case "stop_at": {
 
-            // «Я забыл(а) нажать паузу» — закрываем сессию в указанное время
+            // «Я забув(ла) натиснути паузу» — закриваємо сесію у вказаний час
             if (!active) {
                 return { error: "Нет активной сессии", code: 409 };
             }
@@ -383,7 +383,7 @@ function applyWorkAction(task, sessions, action, body = {}) {
     return { events };
 }
 
-// Если статус меняется обычным способом (галочка, редактирование) — закрываем активную сессию
+// Якщо статус змінюється звичайним способом (галочка, редагування) — закриваємо активну сесію
 function onStatusChange(task, sessions, newStatus) {
 
     const events = [];
@@ -414,7 +414,7 @@ function onStatusChange(task, sessions, newStatus) {
     return events;
 }
 
-// Прогноз, который видел пользователь при создании задачи (сохраняется один раз)
+// Прогноз, який бачив користувач під час створення задачі (зберігається один раз)
 function cleanForecastSnapshot(input) {
 
     if (!input || typeof input !== "object") return null;

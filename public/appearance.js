@@ -1,11 +1,11 @@
 // ========================================
-// ВНЕШНИЙ ВИД: цвета, фон, шармики, неоновый график
+// ЗОВНІШНІЙ ВИГЛЯД: кольори, фон, фігурки, неоновий графік
 // ----------------------------------------
-// Settings → Appearance. Всё сохраняется в аккаунте (и копия в браузере,
-// чтобы тема применялась мгновенно при следующем открытии).
+// Settings → Appearance. Усе зберігається в акаунті (і копія в браузері,
+// щоб тема застосовувалася миттєво під час наступного відкриття).
 // ========================================
 
-// Своя копия экранирования (app.js подключается позже)
+// Своя копія екранування (app.js підключається пізніше)
 function escHtml(text) {
     return String(text)
         .replace(/&/g, "&amp;")
@@ -16,12 +16,12 @@ function escHtml(text) {
 
 const DEFAULT_APPEARANCE = {
     preset: "midnight",
-    colors: null,                  // null = стандартная тема
-    panelOpacity: 1,               // прозрачность панелей (видно фон)
-    chartColors: null,             // свои цвета графиков (8 слотов)
+    colors: null,                  // null = стандартна тема
+    panelOpacity: 1,               // прозорість панелей (видно фон)
+    chartColors: null,             // свої кольори графіків (8 слотів)
     background: {
         type: "color",             // color | photo
-        color1: "",                // "" = цвет фона темы
+        color1: "",                // "" = колір фону теми
         color2: "#2a1f4d",
         gradient: false,
         angle: 160,
@@ -54,7 +54,7 @@ function mergeAppearance(saved) {
     };
 }
 
-// Вызывается из app.js, когда пришли данные пользователя
+// Викликається з app.js, коли прийшли дані користувача
 function loadAppearanceFromUser(user) {
 
     if (appearanceLoaded) return;
@@ -72,7 +72,7 @@ function cacheAppearance() {
 
 let appearanceSaveTimer = null;
 
-// Сохранение с небольшой задержкой — чтобы не слать запрос на каждый сдвиг ползунка
+// Збереження з невеликою затримкою — щоб не надсилати запит на кожен зсув повзунка
 function saveAppearance() {
 
     cacheAppearance();
@@ -108,11 +108,11 @@ function applyAppearance() {
     renderCharms();
     updateGlow();
 
-    // Графики продуктивности перерисовываются со своими цветами
+    // Графіки продуктивності перемальовуються зі своїми кольорами
     if (typeof analyticsVisible === "function" && analyticsVisible()) renderAnalytics();
 }
 
-// Цвета графиков: свои или стандартная проверенная палитра
+// Кольори графіків: свої або стандартна перевірена палітра
 function getChartColors() {
     const own = userAppearance.chartColors;
     return Array.isArray(own) && own.length === CHART_COLORS.length ? own : CHART_COLORS;
@@ -124,7 +124,7 @@ function themeAccent() {
 
 
 // ========================================
-// ФОН: цвет или фото
+// ФОН: колір або фото
 // ========================================
 
 const bgBase = document.querySelector("#bgBase");
@@ -154,10 +154,10 @@ function applyBackground() {
 
 
 // ========================================
-// ШАРМИКИ: маленькие неоновые фигурки с фразами
+// ФІГУРКИ: маленькі неонові фігурки з фразами
 // ========================================
 
-// Фигурки в рамке 100×100, центр (50, 50), радиус ~28 (вокруг — кольцо текста)
+// Фігурки в рамці 100×100, центр (50, 50), радіус ~28 (довкола — кільце тексту)
 const CHARM_SHAPES = {
     star: { name: "Star", svg: `<polygon points="50,22 56.5,41 76.6,41.4 60.5,53.5 66.4,72.6 50,61.2 33.6,72.6 39.5,53.5 23.4,41.4 43.5,41"/>` },
     heart: { name: "Heart", svg: `<path d="M50,72 C30,58 24,47 24,38 C24,29 31,24 38,24 C44,24 48,28 50,32 C52,28 56,24 62,24 C69,24 76,29 76,38 C76,47 70,58 50,72 Z"/>` },
@@ -216,11 +216,11 @@ function newCharm(shape, phrase) {
     };
 }
 
-// SVG одного шармика: фигурка + фраза мелким шрифтом по кругу
+// SVG однієї фігурки: фігурка + фраза дрібним шрифтом по колу
 function charmSvg(item, idPrefix = "c") {
 
     const ringId = `${idPrefix}-ring-${item.id}`;
-    // Повторяем фразу, чтобы она обошла весь круг
+    // Повторюємо фразу, щоб вона обійшла все коло
     const text = `${item.phrase} ✦ `.repeat(Math.max(1, Math.floor(68 / (item.phrase.length + 3))));
 
     return `
@@ -254,7 +254,7 @@ function renderCharms() {
         el.style.width = `${size}px`;
         el.style.height = `${size}px`;
 
-        // Плавание: у каждого свой ритм
+        // Плавання: у кожної свій ритм
         const float = document.createElement("div");
         float.className = "charm-float";
         float.style.animationDuration = `${7 + (i * 1.7) % 5}s`;
@@ -272,7 +272,7 @@ function renderCharms() {
     cacheCharmRects();
 }
 
-// ---------- Реакция на мышку: шармики мягко отплывают ----------
+// ---------- Реакція на мишку: фігурки м'яко відпливають ----------
 
 let charmRects = [];
 
@@ -318,9 +318,9 @@ document.addEventListener("mousemove", (event) => {
     });
 });
 
-// ---------- Двойной клик — увеличить и прочитать фразу ----------
+// ---------- Подвійний клік — збільшити й прочитати фразу ----------
 
-// Где двойной клик считается «по фону», а не по панели или кнопке
+// Де подвійний клік вважається «по фону», а не по панелі чи кнопці
 const NOT_BACKGROUND = "button, a, input, textarea, select, label, .sidebar, .stat-card, .tasks-section, .calendar-card, .profile-card, .settings-tabs, .analytics-tile, .modal-overlay, .header h1, .header p, .toast, .task-card";
 
 let zoomedCharm = null;
@@ -358,7 +358,7 @@ function openCharmZoom(item, hit) {
     charmZoom.classList.add("visible");
     hit.el.classList.add("hidden-while-zoomed");
 
-    // Вылетает из своего места на фоне (FLIP-анимация)
+    // Вилітає зі свого місця на фоні (FLIP-анімація)
     const art = charmZoom.querySelector(".charm-zoom-art");
     const to = art.getBoundingClientRect();
     const scale = (hit.r * 2) / to.width;
@@ -417,7 +417,7 @@ document.addEventListener("keydown", (event) => {
 
 
 // ========================================
-// НЕОНОВЫЙ ГРАФИК НА ФОНЕ (только активные участки)
+// НЕОНОВИЙ ГРАФІК НА ФОНІ (лише активні ділянки)
 // ========================================
 
 const bgGlow = document.querySelector("#bgGlow");
@@ -449,7 +449,7 @@ function updateGlow() {
 
     refreshGlowData();
 
-    // Раз в минуту — перерисовать (идущая сессия растёт), раз в 5 минут — свежие данные
+    // Раз на хвилину — перемалювати (поточна сесія росте), раз на 5 хвилин — свіжі дані
     let tick = 0;
     glowTimer = setInterval(() => {
         tick++;
@@ -465,7 +465,7 @@ function drawGlow() {
     const w = window.innerWidth;
     const h = window.innerHeight;
 
-    // Последние 7 дней по 30 минут
+    // Останні 7 днів по 30 хвилин
     const step = 30 * 60 * 1000;
     const end = serverNow();
     const start = end - 7 * 24 * 3600 * 1000;
@@ -484,7 +484,7 @@ function drawGlow() {
         }
     });
 
-    // Мягкое сглаживание (гаусс), чтобы вместо острых пиков были плавные волны
+    // М'яке згладжування (гаусс), щоб замість гострих піків були плавні хвилі
     const sigma = 3;
     const kernel = [];
     for (let k = -3 * sigma; k <= 3 * sigma; k++) kernel.push(Math.exp(-(k * k) / (2 * sigma * sigma)));
@@ -502,7 +502,7 @@ function drawGlow() {
     const max = Math.max(...values, 1);
     const minVisible = max * 0.04;
 
-    // Разбиваем на «живые» участки — без длинной прямой по нулю
+    // Розбиваємо на «живі» ділянки — без довгої прямої по нулю
     const runs = [];
     let run = null;
 
@@ -518,10 +518,10 @@ function drawGlow() {
     });
     if (run) runs.push({ ...run, to: Math.min(n - 1, run.to + 1) });
 
-    // Склеиваем живые участки в одну плавную волну на всю ширину экрана:
-    // пустые часы выкидываем, между участками остаётся только мягкая впадинка.
+    // Склеюємо живі ділянки в одну плавну хвилю на всю ширину екрана:
+    // порожні години викидаємо, між ділянками залишається лише м'яка западинка.
     const seq = [];
-    const marks = [];   // где в волне начинается каждый живой участок (для подписей)
+    const marks = [];   // де у хвилі починається кожна жива ділянка (для підписів)
     runs.forEach((r, k) => {
         if (k > 0) seq.push(minVisible * 0.5, minVisible * 0.5);
         marks.push({ pos: seq.length, time: start + r.from * step });
@@ -536,7 +536,7 @@ function drawGlow() {
 
     if (seq.length > 1) {
 
-        // Ещё одно мягкое сглаживание уже по склеенной волне + ровно ~90 точек
+        // Ще одне м'яке згладжування вже по склеєній хвилі + рівно ~90 точок
         const points = 90;
         const sig = Math.max(1, seq.length / 70);
         const sample = pos => {
@@ -559,14 +559,14 @@ function drawGlow() {
         const base = h * 0.94;
         const amp = h * 0.62;
         const px = k => margin + (k / (points - 1)) * (w - margin * 2);
-        // Небольшая «дыхательная» волна сверху, чтобы линия не лежала плоско
+        // Невелика «дихальна» хвиля зверху, щоб лінія не лежала пласко
         const py = (v, k, scale) => base - (0.08 + 0.92 * (v / peak)) * amp * scale
             - Math.sin(k / points * Math.PI * 3) * h * 0.025 * scale;
 
         main.push(smoothPath(wave.map((v, k) => [px(k), py(v, k, 1)])));
 
-        // Подписи: полупрозрачная вертикальная линия + дата/время начала участка.
-        // Новый день — «пн 19.10», тот же день — только «14:30». Слишком близкие пропускаем.
+        // Підписи: напівпрозора вертикальна лінія + дата/час початку ділянки.
+        // Новий день — «пн 19.10», той самий день — лише «14:30». Занадто близькі пропускаємо.
         const DAYS = ["нд", "пн", "вт", "ср", "чт", "пт", "сб"];
         const pad = v => String(v).padStart(2, "0");
         const top = base - amp - h * 0.04;
@@ -615,7 +615,7 @@ window.addEventListener("resize", () => {
 
 
 // ========================================
-// НАСТРОЙКИ: Settings → Appearance
+// НАЛАШТУВАННЯ: Settings → Appearance
 // ========================================
 
 const COLOR_FIELDS = [
@@ -627,7 +627,7 @@ const COLOR_FIELDS = [
     { key: "muted", label: "Secondary text" }
 ];
 
-const $ = sel => document.querySelector(sel);   // короткая запись для этого файла
+const $ = sel => document.querySelector(sel);   // короткий запис для цього файлу
 
 function currentColors() {
     return { ...DEFAULT_THEME_COLORS, ...(userAppearance.colors || {}) };
@@ -637,7 +637,7 @@ function fillAppearanceForm() {
 
     const a = userAppearance;
 
-    // Готовые темы
+    // Готові теми
     $("#themePresets").innerHTML = Object.entries(THEME_PRESETS).map(([key, p]) => {
         const c = { ...DEFAULT_THEME_COLORS, ...(p.colors || {}) };
         return `
@@ -660,7 +660,7 @@ function fillAppearanceForm() {
         });
     });
 
-    // Свои цвета
+    // Свої кольори
     const colors = currentColors();
     $("#colorFields").innerHTML = COLOR_FIELDS.map(f => `
         <label class="color-field">
@@ -684,7 +684,7 @@ function fillAppearanceForm() {
     $("#panelOpacity").value = a.panelOpacity;
     $("#panelOpacityValue").textContent = `${Math.round(a.panelOpacity * 100)}%`;
 
-    // Цвета графиков
+    // Кольори графіків
     const chartColors = getChartColors();
     $("#chartColorFields").innerHTML = chartColors.map((color, i) => {
         const name = (typeof categories !== "undefined" && categories[i]) ? categories[i].name : `Color ${i + 1}`;
@@ -723,7 +723,7 @@ function fillAppearanceForm() {
     $("#bgPhotoPreview").classList.toggle("empty", !bg.photo);
     $("#bgPhotoRemove").style.display = bg.photo ? "" : "none";
 
-    // Шармики
+    // Фігурки
     $("#charmsToggle").checked = a.charms.enabled;
     $("#charmsBody").classList.toggle("disabled", !a.charms.enabled);
     $("#charmSize").value = a.charms.size;
@@ -744,7 +744,7 @@ function fillAppearanceForm() {
 
     renderCharmList();
 
-    // Неоновый график
+    // Неоновий графік
     $("#glowToggle").checked = a.glow.enabled;
     $("#glowIntensity").value = a.glow.intensity;
     $("#glowPanelOpacity").value = a.panelOpacity;
@@ -779,7 +779,7 @@ function renderCharmList() {
     });
 }
 
-// ---------- Обработчики полей (подключаются один раз) ----------
+// ---------- Обробники полів (підключаються один раз) ----------
 
 $("#panelOpacity").addEventListener("input", (event) => {
     userAppearance.panelOpacity = Number(event.target.value);
@@ -841,7 +841,7 @@ $("#bgUseTheme").addEventListener("click", () => {
     saveAppearance();
 });
 
-// Фото: уменьшаем в браузере до 2400px, сохраняем на сервере
+// Фото: зменшуємо в браузері до 2400px, зберігаємо на сервері
 $("#bgPhotoButton").addEventListener("click", () => $("#bgPhotoInput").click());
 
 $("#bgPhotoInput").addEventListener("change", async () => {
@@ -909,11 +909,11 @@ $("#bgPhotoRemove").addEventListener("click", async () => {
     }
 });
 
-// Шармики
+// Фігурки
 $("#charmsToggle").addEventListener("change", (event) => {
     userAppearance.charms.enabled = event.target.checked;
 
-    // Первое включение — сразу несколько случайных, чтобы было видно
+    // Перше ввімкнення — одразу кілька випадкових, щоб було видно
     if (userAppearance.charms.enabled && !userAppearance.charms.items.length) {
         for (let i = 0; i < 6; i++) userAppearance.charms.items.push(newCharm());
     }
@@ -981,10 +981,10 @@ $("#charmShuffle").addEventListener("click", () => {
     saveAppearance();
 });
 
-// Неоновый график
+// Неоновий графік
 $("#glowToggle").addEventListener("change", (event) => {
     userAppearance.glow.enabled = event.target.checked;
-    // Первое включение — сразу делаем окна полупрозрачными, чтобы волну было видно
+    // Перше ввімкнення — одразу робимо вікна напівпрозорими, щоб хвилю було видно
     if (event.target.checked && userAppearance.panelOpacity >= 1) {
         userAppearance.panelOpacity = 0.6;
         applyThemeColors(userAppearance);
@@ -1009,7 +1009,7 @@ $("#glowIntensity").addEventListener("input", (event) => {
     saveAppearance();
 });
 
-// Сразу показываем сохранённый в браузере вид (до ответа сервера)
+// Одразу показуємо збережений у браузері вигляд (до відповіді сервера)
 try {
     const cached = JSON.parse(localStorage.getItem("appearance") || "null");
     if (cached) {

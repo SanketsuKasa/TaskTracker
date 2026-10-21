@@ -168,7 +168,7 @@ module.exports = function registerSharing(app, ctx) {
                 `${req.user.name} wants to see your tasks`,
                 `${req.user.name} (${req.user.email}) asked for access to your Task Tracker tasks. Open Task Tracker → Shared to allow or decline.`);
         } catch (error) {
-            console.error("Не удалось отправить письмо о запросе доступа:", error.message);
+            console.error("Не вдалося надіслати лист про запит доступу:", error.message);
         }
 
         res.json({ ok: true });

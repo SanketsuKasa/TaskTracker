@@ -8,62 +8,62 @@ const registerWishlist = require("./wishlist");
 const worklog = require("./worklog");
 
 const app = express();
-let sharing = null;   // заполняется ниже (спільний доступ)
+let sharing = null;   // заповнюється нижче (спільний доступ)
 const PORT = 3000;
 
 const tasksFile = path.join(__dirname, "tasks.json");
 const usersFile = path.join(__dirname, "users.json");
 const sessionsFile = path.join(__dirname, "sessions.json");
 
-// Сессия живёт 30 дней
+// Сесія живе 30 днів
 const SESSION_DAYS = 30;
 
-// Папка для фото профиля
+// Папка для фото профілю
 const avatarsDir = path.join(__dirname, "uploads", "avatars");
 fs.mkdirSync(avatarsDir, { recursive: true });
 
-// Папка для фото фона
+// Папка для фото фону
 const backgroundsDir = path.join(__dirname, "uploads", "backgrounds");
 fs.mkdirSync(backgroundsDir, { recursive: true });
 
-// Разрешаем JSON-запросы (до 5 МБ — для фото)
+// Дозволяємо JSON-запити (до 9 МБ — для фото)
 app.use(express.json({ limit: "9mb" }));
 
-// Подключаем сайт и загруженные фото
+// Підключаємо сайт і завантажені фото
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Настраиваем отправку писем
+// Налаштовуємо надсилання листів
 initMailer();
 
 
 // ==============================
-// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// ДОПОМІЖНІ ФУНКЦІЇ
 // ==============================
 
-// Чтение и запись JSON-файлов — в storage.js (общие для всех модулей)
+// Читання й запис JSON-файлів — у storage.js (спільні для всіх модулів)
 const { readJson, writeJson } = require("./storage");
 
-// Проверка даты формата YYYY-MM-DD
+// Перевірка дати формату YYYY-MM-DD
 function isValidDate(value) {
     return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
 
-// Проверка почты
+// Перевірка пошти
 function isValidEmail(value) {
     return typeof value === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
-// Хеширование пароля (пароль НЕ хранится в открытом виде)
+// Хешування пароля (пароль НЕ зберігається у відкритому вигляді)
 function hashPassword(password, salt) {
     return crypto.scryptSync(password, salt, 64).toString("hex");
 }
 
-// Создать сессию и вернуть токен
+// Створити сесію й повернути токен
 function createSession(userId) {
 
     const sessions = readJson(sessionsFile)
-        // заодно чистим просроченные
+        // заразом чистимо прострочені
         .filter(s => s.expiresAt > Date.now());
 
     const token = crypto.randomBytes(32).toString("hex");
@@ -79,7 +79,7 @@ function createSession(userId) {
     return token;
 }
 
-// Данные пользователя без пароля и кодов
+// Дані користувача без пароля та кодів
 function publicUser(user) {
     return {
         id: user.id,
@@ -98,7 +98,7 @@ function publicUser(user) {
 
 
 // ==============================
-// ПРОВЕРКА АВТОРИЗАЦИИ (middleware)
+// ПЕРЕВІРКА АВТОРИЗАЦІЇ (middleware)
 // ==============================
 
 function auth(req, res, next) {
@@ -131,18 +131,18 @@ function auth(req, res, next) {
 
 
 // ==============================
-// КОДЫ ИЗ ПИСЕМ
+// КОДИ З ЛИСТІВ
 // ==============================
 
-const CODE_MINUTES = 15;      // код живёт 15 минут
-const RESEND_SECONDS = 60;    // повторно отправить можно через минуту
-const MAX_ATTEMPTS = 5;       // попыток ввода кода
+const CODE_MINUTES = 15;      // код живе 15 хвилин
+const RESEND_SECONDS = 60;    // повторно надіслати можна через хвилину
+const MAX_ATTEMPTS = 5;       // спроб введення коду
 
 function sha256(text) {
     return crypto.createHash("sha256").update(String(text)).digest("hex");
 }
 
-// Создаёт 6-значный код, сохраняет в пользователе ТОЛЬКО его хеш
+// Створює 6-значний код, зберігає в користувачі ЛИШЕ його хеш
 function createCode(user, purpose) {
 
     const code = String(crypto.randomInt(0, 1000000)).padStart(6, "0");
@@ -157,7 +157,7 @@ function createCode(user, purpose) {
     return code;
 }
 
-// Проверка кода. Возвращает текст ошибки или null, если всё хорошо
+// Перевірка коду. Повертає текст помилки або null, якщо все гаразд
 function checkCode(user, purpose, code) {
 
     const saved = user[`${purpose}Code`];
@@ -184,7 +184,7 @@ function checkCode(user, purpose, code) {
     return null;
 }
 
-// Можно ли уже отправить код повторно
+// Чи можна вже надіслати код повторно
 function secondsUntilResend(user, purpose) {
     const saved = user[`${purpose}Code`];
     if (!saved) return 0;
@@ -192,7 +192,7 @@ function secondsUntilResend(user, purpose) {
     return Math.max(0, left);
 }
 
-// Создать код, сохранить пользователей и отправить письмо
+// Створити код, зберегти користувачів і надіслати лист
 async function sendNewCode(users, user, purpose) {
 
     const code = createCode(user, purpose);
@@ -209,7 +209,7 @@ function findUserByEmail(users, email) {
     return users.find(u => u.email === clean);
 }
 
-// Удалить все сессии пользователя (кроме, при желании, одной)
+// Видалити всі сесії користувача (крім, за бажанням, однієї)
 function removeSessions(userId, keepToken = null) {
     const sessions = readJson(sessionsFile)
         .filter(s => s.userId !== userId || s.token === keepToken);
@@ -225,7 +225,7 @@ function loginResponse(user) {
 
 
 // ==============================
-// РЕГИСТРАЦИЯ
+// РЕЄСТРАЦІЯ
 // ==============================
 
 app.post("/api/register", async (req, res) => {
@@ -260,7 +260,7 @@ app.post("/api/register", async (req, res) => {
 
         if (user) {
 
-            // Почта зарегистрирована, но не подтверждена — обновляем данные
+            // Пошта зареєстрована, але не підтверджена — оновлюємо дані
             if (secondsUntilResend(user, "verify") > 0) {
                 return res.status(429).json({
                     error: `Подождите ${secondsUntilResend(user, "verify")} сек. перед повторной отправкой`
@@ -286,7 +286,7 @@ app.post("/api/register", async (req, res) => {
 
             users.push(user);
 
-            // Самый первый пользователь забирает старые задачи (без владельца)
+            // Найперший користувач забирає старі задачі (без власника)
             if (users.length === 1) {
 
                 const tasks = readJson(tasksFile);
@@ -321,7 +321,7 @@ app.post("/api/register", async (req, res) => {
 
 
 // ==============================
-// ПОДТВЕРЖДЕНИЕ ПОЧТЫ
+// ПІДТВЕРДЖЕННЯ ПОШТИ
 // ==============================
 
 app.post("/api/verify-email", (req, res) => {
@@ -340,7 +340,7 @@ app.post("/api/verify-email", (req, res) => {
     const error = checkCode(user, "verify", req.body.code);
 
     if (error) {
-        writeJson(usersFile, users); // сохраняем счётчик попыток
+        writeJson(usersFile, users); // зберігаємо лічильник спроб
         return res.status(400).json({ error: error });
     }
 
@@ -352,7 +352,7 @@ app.post("/api/verify-email", (req, res) => {
 
 
 // ==============================
-// ОТПРАВИТЬ КОД ЕЩЁ РАЗ
+// НАДІСЛАТИ КОД ЩЕ РАЗ
 // ==============================
 
 app.post("/api/resend-code", async (req, res) => {
@@ -364,7 +364,7 @@ app.post("/api/resend-code", async (req, res) => {
         const users = readJson(usersFile);
         const user = findUserByEmail(users, req.body.email);
 
-        // Не рассказываем, есть ли такая почта
+        // Не розповідаємо, чи є така пошта
         if (!user || (purpose === "verify" && user.emailVerified !== false)) {
             return res.json({ message: "Если почта есть в системе — код отправлен" });
         }
@@ -391,7 +391,7 @@ app.post("/api/resend-code", async (req, res) => {
 
 
 // ==============================
-// ВХОД
+// ВХІД
 // ==============================
 
 app.post("/api/login", async (req, res) => {
@@ -407,7 +407,7 @@ app.post("/api/login", async (req, res) => {
             return res.status(401).json({ error: "Неверная почта или пароль" });
         }
 
-        // Почта не подтверждена — отправляем новый код
+        // Пошта не підтверджена — надсилаємо новий код
         if (user.emailVerified === false) {
 
             let delivered = false;
@@ -438,7 +438,7 @@ app.post("/api/login", async (req, res) => {
 
 
 // ==============================
-// ЗАБЫЛИ ПАРОЛЬ
+// ЗАБУЛИ ПАРОЛЬ
 // ==============================
 
 app.post("/api/forgot-password", async (req, res) => {
@@ -454,7 +454,7 @@ app.post("/api/forgot-password", async (req, res) => {
             delivered = await sendNewCode(users, user, "reset");
         }
 
-        // Всегда одинаковый ответ — чтобы нельзя было проверить, чья почта зарегистрирована
+        // Завжди однакова відповідь — щоб не можна було перевірити, чия пошта зареєстрована
         res.json({
             message: "Если почта есть в системе — мы отправили код",
             delivered: delivered
@@ -495,12 +495,12 @@ app.post("/api/reset-password", (req, res) => {
     user.salt = crypto.randomBytes(16).toString("hex");
     user.passwordHash = hashPassword(password, user.salt);
 
-    // Код пришёл на почту — значит почта точно настоящая
+    // Код прийшов на пошту — отже, пошта точно справжня
     user.emailVerified = true;
 
     writeJson(usersFile, users);
 
-    // Выкидываем все старые сессии
+    // Викидаємо всі старі сесії
     removeSessions(user.id);
 
     res.json(loginResponse(user));
@@ -508,7 +508,7 @@ app.post("/api/reset-password", (req, res) => {
 
 
 // ==============================
-// ТЕКУЩИЙ ПОЛЬЗОВАТЕЛЬ / ВЫХОД
+// ПОТОЧНИЙ КОРИСТУВАЧ / ВИХІД
 // ==============================
 
 app.get("/api/me", auth, (req, res) => {
@@ -527,10 +527,10 @@ app.post("/api/logout", auth, (req, res) => {
 
 
 // ==============================
-// ПРОФИЛЬ
+// ПРОФІЛЬ
 // ==============================
 
-// Изменить имя
+// Змінити ім'я
 app.patch("/api/profile", auth, (req, res) => {
 
     const name = String(req.body.name || "").trim();
@@ -548,7 +548,7 @@ app.patch("/api/profile", auth, (req, res) => {
     res.json(publicUser(user));
 });
 
-// Удалить старый файл аватарки
+// Видалити старий файл аватарки
 function removeAvatarFile(user) {
 
     if (!user.avatar) return;
@@ -560,7 +560,7 @@ function removeAvatarFile(user) {
     }
 }
 
-// Загрузить фото (приходит как data:image/...;base64,...)
+// Завантажити фото (приходить як data:image/...;base64,...)
 app.put("/api/profile/avatar", auth, (req, res) => {
 
     try {
@@ -603,7 +603,7 @@ app.put("/api/profile/avatar", auth, (req, res) => {
 
 });
 
-// Удалить фото
+// Видалити фото
 app.delete("/api/profile/avatar", auth, (req, res) => {
 
     const users = readJson(usersFile);
@@ -617,7 +617,7 @@ app.delete("/api/profile/avatar", auth, (req, res) => {
     res.json(publicUser(user));
 });
 
-// Сменить пароль
+// Змінити пароль
 app.post("/api/profile/password", auth, (req, res) => {
 
     const current = String(req.body.currentPassword || "");
@@ -638,7 +638,7 @@ app.post("/api/profile/password", auth, (req, res) => {
     user.passwordHash = hashPassword(next, user.salt);
     writeJson(usersFile, users);
 
-    // Выходим на всех остальных устройствах
+    // Виходимо на всіх інших пристроях
     removeSessions(user.id, req.token);
 
     res.json({ message: "Пароль изменён" });
@@ -646,7 +646,7 @@ app.post("/api/profile/password", auth, (req, res) => {
 
 
 // ==============================
-// НАСТРОЙКИ ПОЛЬЗОВАТЕЛЯ
+// НАЛАШТУВАННЯ КОРИСТУВАЧА
 // ==============================
 
 app.patch("/api/settings", auth, (req, res) => {
@@ -667,7 +667,7 @@ app.patch("/api/settings", auth, (req, res) => {
 
 
 // ==============================
-// ВНЕШНИЙ ВИД: цвета, фон, «шармики»
+// ЗОВНІШНІЙ ВИГЛЯД: кольори, фон, «фігурки»
 // ==============================
 
 app.put("/api/appearance", auth, (req, res) => {
@@ -685,7 +685,7 @@ app.put("/api/appearance", auth, (req, res) => {
     const users = readJson(usersFile);
     const user = users.find(u => u.id === req.user.id);
 
-    // Фото фона меняется только через загрузку — не даём подставить чужой путь
+    // Фото фону змінюється лише через завантаження — не даємо підставити чужий шлях
     const photo = user.appearance && user.appearance.background && user.appearance.background.photo;
     appearance.background = { ...(appearance.background || {}), photo: photo || "" };
 
@@ -758,7 +758,7 @@ app.delete("/api/appearance/photo", auth, (req, res) => {
 
 
 // ==============================
-// КАТЕГОРИИ (у каждого пользователя свои)
+// КАТЕГОРІЇ (у кожного користувача свої)
 // ==============================
 
 const DEFAULT_CATEGORIES = [
@@ -768,15 +768,15 @@ const DEFAULT_CATEGORIES = [
     { name: "Personal", subs: [] }
 ];
 
-// Базовые категории есть у всех и не удаляются
+// Базові категорії є в усіх і не видаляються
 const BASE_CATEGORY_NAMES = DEFAULT_CATEGORIES.map(c => c.name);
 
 function isBaseCategory(name) {
     return BASE_CATEGORY_NAMES.includes(name);
 }
 
-// Базовые категории всегда в начале списка (с подкатегориями пользователя),
-// за ними — свои категории пользователя
+// Базові категорії завжди на початку списку (з підкатегоріями користувача),
+// за ними — власні категорії користувача
 function withBaseCategories(list) {
 
     const saved = Array.isArray(list) ? list : DEFAULT_CATEGORIES;
@@ -797,7 +797,7 @@ function getCategories(user) {
     return withBaseCategories(user.categories);
 }
 
-// Проверяем и чистим список категорий, который прислал браузер
+// Перевіряємо й чистимо список категорій, який надіслав браузер
 function cleanCategories(input) {
 
     if (!Array.isArray(input) || input.length > 50) {
@@ -852,7 +852,7 @@ app.put("/api/categories", auth, (req, res) => {
 
     try {
 
-        // Базовые категории вернутся, даже если их убрали из списка
+        // Базові категорії повернуться, навіть якщо їх прибрали зі списку
         const categories = withBaseCategories(cleanCategories(req.body.categories))
             .map(({ name, subs }) => ({ name, subs }));
 
@@ -871,9 +871,9 @@ app.put("/api/categories", auth, (req, res) => {
     }
 });
 
-// Переименовать категорию или подкатегорию (вместе с задачами)
-// { category, newName }            — категорию
-// { category, sub, newName }       — подкатегорию
+// Перейменувати категорію або підкатегорію (разом із задачами)
+// { category, newName }            — категорію
+// { category, sub, newName }       — підкатегорію
 app.post("/api/categories/rename", auth, (req, res) => {
 
     try {
@@ -916,7 +916,7 @@ app.post("/api/categories/rename", auth, (req, res) => {
             ownTasks.filter(t => t.subcategory === subName).forEach(t => { t.subcategory = newName; });
         }
 
-        // Проверяем новый список (пустые и повторяющиеся названия не пройдут)
+        // Перевіряємо новий список (порожні та повторювані назви не пройдуть)
         user.categories = cleanCategories(list);
 
         writeJson(usersFile, users);
@@ -934,18 +934,18 @@ app.post("/api/categories/rename", auth, (req, res) => {
     }
 });
 
-// Короткая проверка текстовых полей задачи
+// Коротка перевірка текстових полів задачі
 function cleanText(value, max) {
     return String(value || "").trim().slice(0, max);
 }
 
 
-// Все запросы к задачам — только для вошедших
+// Усі запити до задач — лише для тих, хто увійшов
 app.use("/api/tasks", auth);
 
 
 // ==============================
-// ПОЛУЧИТЬ ЗАДАЧИ ПОЛЬЗОВАТЕЛЯ
+// ОТРИМАТИ ЗАДАЧІ КОРИСТУВАЧА
 // ==============================
 
 app.get("/api/tasks", (req, res) => {
@@ -958,7 +958,7 @@ app.get("/api/tasks", (req, res) => {
             .filter(task => task.userId === req.user.id)
             .map(task => worklog.withWork(task, sessions));
 
-        // Время сервера — чтобы таймер в браузере не зависел от неточных часов
+        // Час сервера — щоб таймер у браузері не залежав від неточного годинника
         res.set("X-Server-Time", new Date().toISOString());
 
         res.json(tasks);
@@ -977,7 +977,7 @@ app.get("/api/tasks", (req, res) => {
 
 
 // ==============================
-// ДОБАВИТЬ ЗАДАЧУ
+// ДОДАТИ ЗАДАЧУ
 // ==============================
 
 app.post("/api/tasks", (req, res) => {
@@ -1014,10 +1014,10 @@ app.post("/api/tasks", (req, res) => {
             ...plan
         };
 
-        // Первоначальный план сохраняем отдельно — он не перезаписывается
+        // Початковий план зберігаємо окремо — він не перезаписується
         newTask.initialPlan = worklog.initialPlan(newTask);
 
-        // Прогноз программы на момент создания — для честной проверки точности потом
+        // Прогноз програми на момент створення — для чесної перевірки точності потім
         const snapshot = worklog.cleanForecastSnapshot(req.body.forecastSnapshot);
         if (snapshot) newTask.forecastSnapshot = snapshot;
 
@@ -1047,7 +1047,7 @@ app.post("/api/tasks", (req, res) => {
 
 
 // ==============================
-// УДАЛИТЬ ЗАДАЧУ
+// ВИДАЛИТИ ЗАДАЧУ
 // ==============================
 
 app.delete("/api/tasks/:id", (req, res) => {
@@ -1084,7 +1084,7 @@ app.delete("/api/tasks/:id", (req, res) => {
 
 
 // ==============================
-// ИЗМЕНИТЬ СТАТУС / ДЕДЛАЙН
+// ЗМІНИТИ СТАТУС / ДЕДЛАЙН
 // ==============================
 
 app.patch("/api/tasks/:id", (req, res) => {
@@ -1105,7 +1105,7 @@ app.patch("/api/tasks/:id", (req, res) => {
 
         }
 
-        // Поля плана (сложность, оценка, сроки) — проверяем до любых изменений
+        // Поля плану (складність, оцінка, терміни) — перевіряємо до будь-яких змін
         let plan;
 
         try {
@@ -1118,14 +1118,14 @@ app.patch("/api/tasks/:id", (req, res) => {
         const before = { ...task };
         let statusEvents = [];
 
-        // Разрешенные статусы
+        // Дозволені статуси
         const allowedStatuses = [
             "todo",
             "progress",
             "done"
         ];
 
-        // Меняем статус (если передан)
+        // Змінюємо статус (якщо передано)
         if (req.body.status !== undefined) {
 
             if (!allowedStatuses.includes(req.body.status)) {
@@ -1141,7 +1141,7 @@ app.patch("/api/tasks/:id", (req, res) => {
 
         }
 
-        // Меняем текстовые поля (если переданы) — для редактирования задачи
+        // Змінюємо текстові поля (якщо передано) — для редагування задачі
         if (req.body.title !== undefined) {
 
             const title = cleanText(req.body.title, 200);
@@ -1165,7 +1165,7 @@ app.patch("/api/tasks/:id", (req, res) => {
             task.subcategory = cleanText(req.body.subcategory, 40);
         }
 
-        // Меняем дедлайн (если передан). "" = убрать дедлайн
+        // Змінюємо дедлайн (якщо передано). "" = прибрати дедлайн
         if (req.body.deadline !== undefined) {
 
             if (req.body.deadline !== "" && !isValidDate(req.body.deadline)) {
@@ -1185,7 +1185,7 @@ app.patch("/api/tasks/:id", (req, res) => {
         writeJson(tasksFile, tasks);
         worklog.saveSessions(sessions);
 
-        // Журнал: что изменилось в плане (старые значения остаются в событиях)
+        // Журнал: що змінилося в плані (старі значення залишаються в подіях)
         worklog.logEvents(req.user.id, task.id, [
             ...statusEvents,
             ...worklog.planChangeEvents(before, { ...plan, deadline: req.body.deadline })
@@ -1207,7 +1207,7 @@ app.patch("/api/tasks/:id", (req, res) => {
 
 
 // ==============================
-// РАБОТА НАД ЗАДАЧЕЙ: Почати / Призупинити / Продовжити / Завершити
+// РОБОТА НАД ЗАДАЧЕЮ: Почати / Призупинити / Продовжити / Завершити
 // ==============================
 
 app.post("/api/tasks/:id/work", (req, res) => {
@@ -1243,7 +1243,7 @@ app.post("/api/tasks/:id/work", (req, res) => {
     }
 });
 
-// Все рабочие сессии пользователя — для графиков продуктивности
+// Усі робочі сесії користувача — для графіків продуктивності
 app.get("/api/productivity/sessions", auth, (req, res) => {
 
     const sessions = worklog.readSessions()
@@ -1255,7 +1255,7 @@ app.get("/api/productivity/sessions", auth, (req, res) => {
     res.json(sessions);
 });
 
-// История задачи: все сессии и события
+// Історія задачі: усі сесії та події
 app.get("/api/tasks/:id/history", (req, res) => {
 
     const id = Number(req.params.id);
@@ -1291,7 +1291,7 @@ registerWishlist(app, { readJson, writeJson, usersFile, auth, isValidDate, shari
 app.listen(PORT, () => {
 
     console.log(
-        `Task Tracker запущен: http://localhost:${PORT}`
+        `STAK запущено: http://localhost:${PORT}`
     );
 
 });

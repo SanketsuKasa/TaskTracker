@@ -20,7 +20,7 @@
             <span class="logo-text"><strong class="logo-name">STAK</strong><small class="logo-sub">ta<b>SK</b> tracker</small></span>
         </div>
 
-        <!-- Вкладки (только на экранах входа и регистрации) -->
+        <!-- Вкладки (лише на екранах входу та реєстрації) -->
         <div class="auth-tabs">
             <button type="button" class="auth-tab active" data-screen="login">Sign in</button>
             <button type="button" class="auth-tab" data-screen="register">Create account</button>
@@ -31,19 +31,19 @@
 
         <form id="authForm" novalidate>
 
-            <!-- Имя -->
+            <!-- Ім'я -->
             <div class="form-group only-register">
                 <label for="authName">Name</label>
                 <input type="text" id="authName" placeholder="Your name" autocomplete="name" maxlength="40">
             </div>
 
-            <!-- Почта -->
+            <!-- Пошта -->
             <div class="form-group only-login only-register only-forgot">
                 <label for="authEmail">Email</label>
                 <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email">
             </div>
 
-            <!-- Код из письма -->
+            <!-- Код із листа -->
             <div class="form-group only-verify only-reset">
                 <label>Code from the email</label>
                 <div class="code-inputs" id="codeInputs">
@@ -81,7 +81,7 @@
                 Sign in
             </button>
 
-            <!-- Отправить код ещё раз / назад -->
+            <!-- Надіслати код ще раз / назад -->
             <div class="auth-links only-verify only-reset only-forgot">
                 <button type="button" class="link-button only-verify only-reset" id="resendButton">Send the code again</button>
                 <button type="button" class="link-button" id="backButton">← Back to sign in</button>
@@ -94,7 +94,7 @@
 
     <script>
 
-        // Если уже вошли — сразу в приложение
+        // Якщо вже увійшли — одразу в застосунок
         if (localStorage.getItem("token")) {
             location.href = "/";
         }
@@ -118,10 +118,10 @@
         const subtitle = document.querySelector("#authSubtitle");
 
         let screen = "login";
-        let pendingEmail = "";   // почта, на которую отправлен код
+        let pendingEmail = "";   // пошта, на яку надіслано код
         let resendTimer = null;
 
-        // Тексты для каждого экрана
+        // Тексти для кожного екрана
         const screens = {
             login: {
                 title: "Welcome back",
@@ -155,7 +155,7 @@
 
 
         // ========================================
-        // ПЕРЕКЛЮЧЕНИЕ ЭКРАНОВ
+        // ПЕРЕМИКАННЯ ЕКРАНІВ
         // ========================================
 
         function setScreen(newScreen) {
@@ -212,7 +212,7 @@
         });
 
 
-        // Показать / скрыть пароль
+        // Показати / приховати пароль
         const togglePassword = document.querySelector("#togglePassword");
 
         togglePassword.addEventListener("click", () => {
@@ -223,21 +223,21 @@
 
 
         // ========================================
-        // 6 КЛЕТОЧЕК ДЛЯ КОДА
+        // 6 КЛІТИНОК ДЛЯ КОДУ
         // ========================================
 
         codeInputs.forEach((input, index) => {
 
             input.addEventListener("input", () => {
 
-                // Оставляем только цифры
+                // Залишаємо лише цифри
                 input.value = input.value.replace(/\D/g, "").slice(-1);
 
                 if (input.value && index < codeInputs.length - 1) {
                     codeInputs[index + 1].focus();
                 }
 
-                // Все 6 цифр введены — подтверждаем автоматически (только на экране verify)
+                // Усі 6 цифр введено — підтверджуємо автоматично (лише на екрані verify)
                 if (screen === "verify" && getCode().length === 6) {
                     form.requestSubmit();
                 }
@@ -249,7 +249,7 @@
                 }
             });
 
-            // Вставка кода целиком (Ctrl+V)
+            // Вставлення коду цілком (Ctrl+V)
             input.addEventListener("paste", (event) => {
 
                 const digits = (event.clipboardData.getData("text") || "").replace(/\D/g, "").slice(0, 6);
@@ -276,7 +276,7 @@
 
 
         // ========================================
-        // ПОВТОРНАЯ ОТПРАВКА (раз в минуту)
+        // ПОВТОРНЕ НАДСИЛАННЯ (раз на хвилину)
         // ========================================
 
         function startResendTimer(seconds = 60) {
@@ -318,7 +318,7 @@
 
 
         // ========================================
-        // ЗАПРОСЫ
+        // ЗАПИТИ
         // ========================================
 
         async function post(url, body) {
@@ -334,7 +334,7 @@
             try {
                 data = await response.json();
             } catch (error) {
-                // Сервер прислал не JSON — скорее всего запущена старая версия
+                // Сервер надіслав не JSON — найімовірніше, запущено стару версію
                 throw new Error("Server error. Restart the server: Ctrl+C, then node server.js");
             }
 
@@ -347,7 +347,7 @@
             return data;
         }
 
-        // Подсказка, если письма пока печатаются в терминале
+        // Підказка, якщо листи поки друкуються в терміналі
         function showDeliveryInfo(delivered) {
             infoBox.textContent = delivered === false
                 ? "Email is not configured yet — the code is printed in the server terminal."
@@ -368,7 +368,7 @@
 
 
         // ========================================
-        // ОТПРАВКА ФОРМЫ
+        // НАДСИЛАННЯ ФОРМИ
         // ========================================
 
         form.addEventListener("submit", async (event) => {
@@ -380,7 +380,7 @@
             const email = emailInput.value.trim();
             const password = passwordInput.value;
 
-            // ---------- Проверки на клиенте ----------
+            // ---------- Перевірки на клієнті ----------
 
             if (["login", "register", "forgot"].includes(screen) &&
                 !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -455,7 +455,7 @@
 
             } catch (error) {
 
-                // Пытаемся войти, а почта не подтверждена — показываем ввод кода
+                // Намагаємося увійти, а пошта не підтверджена — показуємо введення коду
                 if (error.data && error.data.needsVerification) {
                     pendingEmail = error.data.email;
                     showDeliveryInfo(error.data.delivered);
@@ -465,7 +465,7 @@
                     errorBox.textContent = error.message;
                 }
 
-                // Неверный код — очищаем клеточки
+                // Неправильний код — очищаємо клітинки
                 if (screen === "verify") {
                     codeInputs.forEach(input => input.value = "");
                     codeInputs[0].focus();

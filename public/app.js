@@ -1,15 +1,15 @@
 // ========================================
-// АВТОРИЗАЦИЯ
+// АВТОРИЗАЦІЯ
 // ========================================
 
 const token = localStorage.getItem("token");
 
-// Не вошли — на страницу входа
+// Не увійшли — на сторінку входу
 if (!token) {
     location.href = "/login.html";
 }
 
-// fetch с токеном. Если сессия истекла — выходим
+// fetch із токеном. Якщо сесія закінчилася — виходимо
 async function api(url, options = {}) {
 
     let response;
@@ -27,7 +27,7 @@ async function api(url, options = {}) {
         throw new Error("Server is not running. Start it: node server.js");
     }
 
-    // Сервер ответил HTML-страницей вместо JSON — значит запущена старая версия server.js
+    // Сервер відповів HTML-сторінкою замість JSON — отже, запущено стару версію server.js
     const type = response.headers.get("Content-Type") || "";
 
     if (!type.includes("application/json")) {
@@ -48,7 +48,7 @@ async function api(url, options = {}) {
 
 
 // ========================================
-// ЭЛЕМЕНТЫ СТРАНИЦЫ
+// ЕЛЕМЕНТИ СТОРІНКИ
 // ========================================
 
 const main = document.querySelector("#main");
@@ -101,23 +101,23 @@ const upcomingList = document.querySelector("#upcomingList");
 
 
 // ========================================
-// СОСТОЯНИЕ ПРИЛОЖЕНИЯ
+// СТАН ЗАСТОСУНКУ
 // ========================================
 
-let tasks = [];                 // все задачи с сервера
-let currentView = "dashboard";  // какая кнопка слева выбрана
-let currentFilter = "all";      // какой фильтр сверху выбран
-let searchQuery = "";           // текст поиска
-let selectedDate = null;        // выбранный день в календаре "YYYY-MM-DD"
-let categories = [];            // свои категории пользователя
-let categoryFilterValue = "";   // "" = все, "Study" или "Study›English"
-let editingTask = null;         // задача, которую сейчас редактируем
+let tasks = [];                 // усі задачі з сервера
+let currentView = "dashboard";  // яка кнопка зліва вибрана
+let currentFilter = "all";      // який фільтр зверху вибрано
+let searchQuery = "";           // текст пошуку
+let selectedDate = null;        // вибраний день у календарі "YYYY-MM-DD"
+let categories = [];            // власні категорії користувача
+let categoryFilterValue = "";   // "" = усі, "Study" або "Study›English"
+let editingTask = null;         // задача, яку зараз редагуємо
 
-// Какой месяц показывает календарь (всегда 1-е число)
+// Який місяць показує календар (завжди 1-ше число)
 const now = new Date();
 let calendarMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-// Настройки страниц левого меню
+// Налаштування сторінок лівого меню
 const views = {
     dashboard: {
         title: "Dashboard",
@@ -179,7 +179,7 @@ const categoryColors = {
     Personal: "orange-tag"
 };
 
-// Цвета для новых (своих) категорий
+// Кольори для нових (своїх) категорій
 const extraTagColors = ["pink-tag", "teal-tag", "blue-tag", "orange-tag", "green-tag", "purple-tag"];
 
 function categoryTagClass(name) {
@@ -188,7 +188,7 @@ function categoryTagClass(name) {
         return categoryColors[name];
     }
 
-    // Один и тот же цвет для одного и того же названия
+    // Той самий колір для тієї самої назви
     let hash = 0;
     for (const char of String(name)) {
         hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
@@ -197,7 +197,7 @@ function categoryTagClass(name) {
     return extraTagColors[hash % extraTagColors.length];
 }
 
-// "Study › English" или просто "Study"
+// "Study › English" або просто "Study"
 function categoryLabel(task) {
     const category = task.category || "Development";
     return task.subcategory ? `${category} › ${task.subcategory}` : category;
@@ -210,10 +210,10 @@ function categoryTagHtml(task) {
 
 
 // ========================================
-// РАБОТА С ДАТАМИ
+// РОБОТА З ДАТАМИ
 // ========================================
 
-// Date -> "YYYY-MM-DD" (по местному времени, без сдвига часового пояса)
+// Date -> "YYYY-MM-DD" (за місцевим часом, без зсуву часового поясу)
 function toDateKey(date) {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -248,7 +248,7 @@ function formatLong(key) {
     });
 }
 
-// Сколько дней до дедлайна (отрицательное = просрочено)
+// Скільки днів до дедлайну (від'ємне = прострочено)
 function daysUntil(key) {
     const diff = fromDateKey(key) - fromDateKey(todayKey());
     return Math.round(diff / 86400000);
@@ -262,7 +262,7 @@ function isOverdue(task) {
 
 
 // ========================================
-// ЗАГРУЗКА ЗАДАЧ
+// ЗАВАНТАЖЕННЯ ЗАДАЧ
 // ========================================
 
 async function loadTasks() {
@@ -291,7 +291,7 @@ async function loadTasks() {
 
 
 // ========================================
-// ГЛАВНАЯ ПЕРЕРИСОВКА
+// ГОЛОВНЕ ПЕРЕМАЛЬОВУВАННЯ
 // ========================================
 
 function render() {
@@ -302,13 +302,13 @@ function render() {
     renderProfileStats();
     renderCategoryManager();
 
-    // Графики продуктивности обновляются вместе с задачами (если открыты)
+    // Графіки продуктивності оновлюються разом із задачами (якщо відкриті)
     if (analyticsVisible()) renderAnalytics();
 }
 
 
 // ========================================
-// ЛЕВОЕ МЕНЮ
+// ЛІВЕ МЕНЮ
 // ========================================
 
 function setView(view) {
@@ -323,7 +323,7 @@ function setView(view) {
     pageTitle.textContent = views[view].title;
     pageSubtitle.textContent = views[view].subtitle;
 
-    // Каждая страница включает свой фильтр
+    // Кожна сторінка вмикає свій фільтр
     setFilter(views[view].filter, false);
 
     render();
@@ -341,7 +341,7 @@ function setView(view) {
     }
 }
 
-// ---------- Вкладки настроек ----------
+// ---------- Вкладки налаштувань ----------
 
 const settingsTabs = document.querySelectorAll(".settings-tab");
 const settingsPanels = document.querySelectorAll(".settings-panel");
@@ -355,7 +355,7 @@ function setSettingsTab(tab) {
     settingsTabs.forEach(t => t.classList.toggle("active", t.dataset.tab === tab));
     settingsPanels.forEach(p => p.classList.toggle("active", p.dataset.panel === tab));
 
-    // Запоминаем последнюю вкладку (если браузер разрешает)
+    // Запам'ятовуємо останню вкладку (якщо браузер дозволяє)
     try { localStorage.setItem("settingsTab", tab); } catch (error) { }
 
     loadAnalytics();
@@ -386,7 +386,7 @@ navItems.forEach(item => {
 
 
 // ========================================
-// ФИЛЬТРЫ СВЕРХУ
+// ФІЛЬТРИ ЗВЕРХУ
 // ========================================
 
 function setFilter(filter, shouldRender = true) {
@@ -410,7 +410,7 @@ filterButtons.forEach(button => {
 
 
 // ========================================
-// ПОИСК
+// ПОШУК
 // ========================================
 
 searchInput.addEventListener("input", () => {
@@ -434,7 +434,7 @@ function getVisibleTasks() {
             const text = `${task.title} ${task.description || ""} ${categoryLabel(task)}`.toLowerCase();
             return text.includes(searchQuery);
         })
-        // Новые задачи сверху
+        // Нові задачі зверху
         .sort((a, b) => b.id - a.id);
 }
 
@@ -450,7 +450,7 @@ function renderTasks() {
 
     emptyState.classList.toggle("visible", visible.length === 0);
 
-    // Плашка выбранного дня
+    // Плашка вибраного дня
     if (selectedDate) {
         dateChip.classList.add("visible");
         dateChipText.textContent = `Tasks for ${formatLong(selectedDate)}`;
@@ -490,7 +490,7 @@ function createTaskCard(task) {
     const card = document.createElement("div");
     card.className = "task-card";
 
-    // Карточку можно перетащить на день в календаре
+    // Картку можна перетягнути на день у календарі
     card.draggable = true;
     makeDraggable(card, task);
 
@@ -560,24 +560,24 @@ function createTaskCard(task) {
 
     `;
 
-    // Кнопки «Почати / Призупинити / ...» (только в режиме анализа)
+    // Кнопки «Почати / Призупинити / ...» (лише в режимі аналізу)
     bindProductivityRow(card, task);
 
     // «×» на смужках-мітках помічників
     bindMarkStrips(card, task);
 
-    // Клик по квадратику: Todo → In Progress → Done → Todo
+    // Клік по квадратику: Todo → In Progress → Done → Todo
     card.querySelector(".task-check")
         .addEventListener("click", () => cycleStatus(task));
 
-    // Редактирование: кнопка-карандаш или двойной клик по названию
+    // Редагування: кнопка-олівець або подвійний клік по назві
     card.querySelector(".edit-button")
         .addEventListener("click", () => openEditModal(task));
 
     card.querySelector("h3")
         .addEventListener("dblclick", () => openEditModal(task));
 
-    // Удаление
+    // Видалення
     card.querySelector(".delete-button")
         .addEventListener("click", () => deleteTask(task, card));
 
@@ -586,12 +586,12 @@ function createTaskCard(task) {
 
 
 // ========================================
-// ИЗМЕНЕНИЕ СТАТУСА
+// ЗМІНА СТАТУСУ
 // ========================================
 
 async function cycleStatus(task) {
 
-    // В режиме анализа галочка = «Завершить» (сессия закрывается правильно)
+    // У режимі аналізу галочка = «Завершити» (сесія закривається правильно)
     if (productivityOn) {
         workAction(task, task.status === "done" ? "reopen" : "finish");
         return;
@@ -621,7 +621,7 @@ async function cycleStatus(task) {
 
         render();
 
-        // 🎉 Задача выполнена
+        // 🎉 Задачу виконано
         if (task.status === "done") {
             celebrate(task);
         }
@@ -636,7 +636,7 @@ async function cycleStatus(task) {
 
 
 // ========================================
-// УДАЛЕНИЕ
+// ВИДАЛЕННЯ
 // ========================================
 
 const deleteModal = document.querySelector("#deleteModal");
@@ -647,7 +647,7 @@ const deleteConfirm = document.querySelector("#deleteConfirm");
 
 let resolveDelete = null;
 
-// Показывает окно и ждёт ответа: true — удалить, false — отмена
+// Показує вікно й чекає відповіді: true — видалити, false — скасувати
 function askDelete(task) {
 
     deleteTaskTitle.textContent = task.title;
@@ -660,7 +660,7 @@ function askDelete(task) {
 
     deleteModal.classList.add("active");
 
-    // Фокус на "Cancel" — чтобы случайный Enter ничего не удалил
+    // Фокус на "Cancel" — щоб випадковий Enter нічого не видалив
     setTimeout(() => deleteCancel.focus(), 50);
 
     return new Promise(resolve => {
@@ -685,7 +685,7 @@ function closeDeleteModal(answer) {
 deleteCancel.addEventListener("click", () => closeDeleteModal(false));
 deleteConfirm.addEventListener("click", () => closeDeleteModal(true));
 
-// Клик по тёмному фону — отмена
+// Клік по темному фону — скасування
 deleteModal.addEventListener("click", (event) => {
     if (event.target === deleteModal) {
         closeDeleteModal(false);
@@ -700,7 +700,7 @@ document.addEventListener("keydown", (event) => {
         closeDeleteModal(false);
     }
 
-    // Delete на клавиатуре — подтвердить
+    // Delete на клавіатурі — підтвердити
     if (event.key === "Delete") {
         closeDeleteModal(true);
     }
@@ -724,7 +724,7 @@ async function deleteTask(task, card) {
             throw new Error("Ошибка удаления");
         }
 
-        // Плавно убираем карточку, потом перерисовываем
+        // Плавно прибираємо картку, потім перемальовуємо
         if (card && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
             card.classList.add("removing");
             await new Promise(resolve => setTimeout(resolve, 300));
@@ -768,7 +768,7 @@ function updateStatistics() {
 
 
 // ========================================
-// КАЛЕНДАРЬ
+// КАЛЕНДАР
 // ========================================
 
 function renderCalendar() {
@@ -781,12 +781,12 @@ function renderCalendar() {
         year: "numeric"
     });
 
-    // Неделя начинается с понедельника
+    // Тиждень починається з понеділка
     const firstDay = new Date(year, month, 1);
     const offset = (firstDay.getDay() + 6) % 7;
     const start = new Date(year, month, 1 - offset);
 
-    // Группируем задачи по дате дедлайна
+    // Групуємо задачі за датою дедлайну
     const byDate = {};
     tasks.forEach(task => {
         if (!task.deadline) return;
@@ -798,7 +798,7 @@ function renderCalendar() {
 
     calendarGrid.innerHTML = "";
 
-    // 6 недель = 42 клетки
+    // 6 тижнів = 42 клітинки
     for (let i = 0; i < 42; i++) {
 
         const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
@@ -821,7 +821,7 @@ function renderCalendar() {
         let content = `<span class="day-number">${date.getDate()}</span>`;
 
         if (isBig) {
-            // Большой календарь: названия задач прямо в клетке
+            // Великий календар: назви задач прямо в клітинці
             const shown = dayTasks.slice(0, 3).map(t => {
                 const cls = isOverdue(t) ? "overdue" : t.status;
                 return `<span class="day-task ${cls}" draggable="true" data-id="${t.id}">${escapeHtml(t.title)}</span>`;
@@ -833,7 +833,7 @@ function renderCalendar() {
 
             content += `<span class="day-tasks">${shown}${more}</span>`;
         } else if (dayTasks.length) {
-            // Маленький календарь: цветные точки
+            // Маленький календар: кольорові крапки
             const dots = dayTasks.slice(0, 4).map(t => {
                 const cls = isOverdue(t) ? "overdue-dot" : `${t.status}-dot`;
                 return `<i class="dot ${cls}"></i>`;
@@ -844,16 +844,16 @@ function renderCalendar() {
 
         cell.innerHTML = content;
 
-        // Задачи внутри большого календаря тоже можно перетаскивать
+        // Задачі всередині великого календаря теж можна перетягувати
         cell.querySelectorAll(".day-task").forEach(el => {
             const t = tasks.find(x => x.id === Number(el.dataset.id));
             if (t) makeDraggable(el, t);
         });
 
-        // Сюда можно бросить задачу
+        // Сюди можна кинути задачу
         makeDropTarget(cell, key);
 
-        // Клик — показать задачи этого дня (повторный клик — снять выбор)
+        // Клік — показати задачі цього дня (повторний клік — зняти вибір)
         cell.addEventListener("click", () => {
             selectedDate = selectedDate === key ? null : key;
 
@@ -864,7 +864,7 @@ function renderCalendar() {
             render();
         });
 
-        // Двойной клик — создать задачу на этот день
+        // Подвійний клік — створити задачу на цей день
         cell.addEventListener("dblclick", () => {
             selectedDate = key;
             render();
@@ -908,7 +908,7 @@ function renderUpcoming() {
             <span class="upcoming-when">${formatShort(task.deadline)} · ${when}</span>
         `;
 
-        // Клик — перейти к этому дню в календаре
+        // Клік — перейти до цього дня в календарі
         li.addEventListener("click", () => {
             selectedDate = task.deadline;
             const d = fromDateKey(task.deadline);
@@ -944,12 +944,12 @@ clearDate.addEventListener("click", () => {
 
 
 // ========================================
-// КАТЕГОРИИ И ПОДКАТЕГОРИИ
+// КАТЕГОРІЇ ТА ПІДКАТЕГОРІЇ
 // ========================================
 
 const SUB_SEPARATOR = "›";
 
-// Базовые категории (есть у всех, удалить нельзя)
+// Базові категорії (є в усіх, видалити не можна)
 const BASE_CATEGORIES = [
     { name: "Development", subs: [], base: true },
     { name: "Design", subs: [], base: true },
@@ -966,7 +966,7 @@ async function loadCategories() {
         console.error(error);
     }
 
-    // Что бы ни случилось — базовые категории в списке есть всегда
+    // Хоч би що сталося — базові категорії в списку є завжди
     if (!Array.isArray(categories) || !categories.length) {
         categories = BASE_CATEGORIES.map(c => ({ ...c, subs: [...c.subs] }));
     }
@@ -974,11 +974,11 @@ async function loadCategories() {
     renderCategoryFilter();
     renderCategoryManager();
 
-    // Подписи цветов графиков = названия категорий
+    // Підписи кольорів графіків = назви категорій
     if (appearanceLoaded) fillAppearanceForm();
 }
 
-// Сохранить весь список на сервере. Возвращает true, если получилось
+// Зберегти весь список на сервері. Повертає true, якщо вийшло
 async function saveCategories(newList) {
 
     const response = await api("/api/categories", {
@@ -1012,14 +1012,14 @@ function option(value, text, selected) {
     return el;
 }
 
-// Заполнить выпадающий список категорий в окне задачи
+// Заповнити випадний список категорій у вікні задачі
 function fillCategorySelect(selectedCategory, selectedSub) {
 
     taskCategory.innerHTML = "";
 
     const names = categories.map(c => c.name);
 
-    // Если у задачи категория, которой уже нет в списке, — всё равно показываем её
+    // Якщо в задачі категорія, якої вже немає в списку, — однаково показуємо її
     if (selectedCategory && !names.includes(selectedCategory)) {
         taskCategory.append(option(selectedCategory, selectedCategory, true));
     }
@@ -1054,7 +1054,7 @@ taskCategory.addEventListener("change", () => fillSubcategorySelect(""));
 taskSubcategory.addEventListener("change", updateDeleteSubButton);
 
 
-// ---------- Удалить выбранную подкатегорию прямо в окне задачи ----------
+// ---------- Видалити вибрану підкатегорію прямо у вікні задачі ----------
 
 const deleteSubcategoryButton = document.querySelector("#deleteSubcategoryButton");
 
@@ -1070,7 +1070,7 @@ deleteSubcategoryButton.addEventListener("click", async () => {
 
     if (!sub) return;
 
-    // Первый клик — спросить, второй — удалить
+    // Перший клік — запитати, другий — видалити
     if (!deleteSubcategoryButton.classList.contains("confirm")) {
         deleteSubcategoryButton.classList.add("confirm");
         deleteSubcategoryButton.title = `Click again to delete «${sub}»`;
@@ -1096,7 +1096,7 @@ deleteSubcategoryButton.addEventListener("click", async () => {
 });
 
 
-// ---------- Быстрое добавление прямо в окне задачи ----------
+// ---------- Швидке додавання прямо у вікні задачі ----------
 
 const pendingInlineAdds = [];
 
@@ -1134,14 +1134,14 @@ function setupInlineAdd(buttonId, rowId, inputId, saveId, onSave) {
 
     save.addEventListener("click", submit);
 
-    // Чтобы при сохранении задачи введённое, но не добавленное название тоже сохранилось
+    // Щоб під час збереження задачі введена, але не додана назва теж збереглася
     pendingInlineAdds.push(async () => {
         if (row.classList.contains("visible") && input.value.trim()) {
             await submit();
         }
     });
 
-    // Enter в поле — добавить, а не отправить всю форму
+    // Enter у полі — додати, а не надіслати всю форму
     input.addEventListener("keydown", (event) => {
         if (event.key === "Enter") {
             event.preventDefault();
@@ -1170,7 +1170,7 @@ setupInlineAdd("#addSubcategoryButton", "#newSubcategoryRow", "#newSubcategoryIn
         c.name === categoryName ? { ...c, subs: [...c.subs, sub] } : c
     );
 
-    // Категории нет в списке (старая задача) — добавляем её вместе с подкатегорией
+    // Категорії немає в списку (стара задача) — додаємо її разом із підкатегорією
     if (!findCategory(categoryName)) {
         newList.push({ name: categoryName, subs: [sub] });
     }
@@ -1182,7 +1182,7 @@ setupInlineAdd("#addSubcategoryButton", "#newSubcategoryRow", "#newSubcategoryIn
 });
 
 
-// ---------- Фильтр по категории (рядом с поиском) ----------
+// ---------- Фільтр за категорією (поруч із пошуком) ----------
 
 function renderCategoryFilter() {
 
@@ -1201,7 +1201,7 @@ function renderCategoryFilter() {
         });
     });
 
-    // Выбранная категория пропала — сбрасываем фильтр
+    // Вибрана категорія зникла — скидаємо фільтр
     if (categoryFilter.value !== current) {
         categoryFilterValue = "";
     }
@@ -1227,7 +1227,7 @@ categoryFilter.addEventListener("change", () => {
 });
 
 
-// ---------- Управление категориями в профиле ----------
+// ---------- Керування категоріями в профілі ----------
 
 const categoryList = document.querySelector("#categoryList");
 const profileCategoryForm = document.querySelector("#profileCategoryForm");
@@ -1264,7 +1264,7 @@ function renderCategoryManager() {
             </div>
         `;
 
-        // ---------- Своя категория: переименовать / удалить ----------
+        // ---------- Своя категорія: перейменувати / видалити ----------
 
         if (!category.base) {
 
@@ -1273,7 +1273,7 @@ function renderCategoryManager() {
                     (newName) => renameCategory({ category: category.name, newName }));
             });
 
-            // Первый клик — спросить, второй — удалить
+            // Перший клік — запитати, другий — видалити
             const removeButton = item.querySelector(".chip-remove");
 
             removeButton.addEventListener("click", async () => {
@@ -1293,7 +1293,7 @@ function renderCategoryManager() {
             });
         }
 
-        // ---------- Подкатегории: переименовать (клик) / удалить ----------
+        // ---------- Підкатегорії: перейменувати (клік) / видалити ----------
 
         item.querySelectorAll(".sub-name").forEach(el => {
             el.addEventListener("click", () => {
@@ -1315,10 +1315,10 @@ function renderCategoryManager() {
             });
         });
 
-        // Добавить подкатегорию
+        // Додати підкатегорію
         const subForm = item.querySelector(".sub-add");
 
-        // Сохраняем и по Enter, и когда уходим из поля
+        // Зберігаємо і по Enter, і коли виходимо з поля
         subForm.querySelector("input").addEventListener("blur", () => {
             if (subForm.querySelector("input").value.trim()) {
                 subForm.requestSubmit();
@@ -1344,7 +1344,7 @@ function renderCategoryManager() {
     });
 }
 
-// Превращает название в поле ввода. Enter — сохранить, Esc — отмена
+// Перетворює назву на поле введення. Enter — зберегти, Esc — скасувати
 function startInlineRename(element, currentName, maxLength, onSave) {
 
     const input = document.createElement("input");
@@ -1404,7 +1404,7 @@ async function renameCategory(body) {
         categories = data.categories;
         tasks = data.tasks;
 
-        // Фильтр указывал на старое название — сбрасываем
+        // Фільтр указував на стару назву — скидаємо
         categoryFilterValue = "";
 
         renderCategoryFilter();
@@ -1447,7 +1447,7 @@ profileCategoryForm.addEventListener("submit", async (event) => {
 
 
 // ========================================
-// МОДАЛЬНОЕ ОКНО (создание и редактирование)
+// МОДАЛЬНЕ ВІКНО (створення та редагування)
 // ========================================
 
 function resetInlineAdds() {
@@ -1455,7 +1455,7 @@ function resetInlineAdds() {
     categoryError.textContent = "";
 }
 
-// Новая задача
+// Нова задача
 function openTaskModal(deadline = selectedDate) {
 
     editingTask = null;
@@ -1467,11 +1467,11 @@ function openTaskModal(deadline = selectedDate) {
     taskModalSubtitle.textContent = "Add a new task to your project.";
     taskSubmit.textContent = "Create Task";
 
-    // Если выбран фильтр категории — сразу подставляем её
+    // Якщо вибрано фільтр категорії — одразу підставляємо її
     const [filterCat, filterSub] = categoryFilterValue ? categoryFilterValue.split(SUB_SEPARATOR) : [];
     fillCategorySelect(filterCat || (categories[0] && categories[0].name) || "Development", filterSub || "");
 
-    // Если выбран день в календаре — подставляем его как дедлайн
+    // Якщо вибрано день у календарі — підставляємо його як дедлайн
     taskDeadline.value = deadline || "";
 
     productivityFillForm(null);
@@ -1480,7 +1480,7 @@ function openTaskModal(deadline = selectedDate) {
     taskTitle.focus();
 }
 
-// Редактирование существующей задачи
+// Редагування наявної задачі
 function openEditModal(task) {
 
     editingTask = task;
@@ -1533,7 +1533,7 @@ document.addEventListener("keydown", (event) => {
 
 
 // ========================================
-// СОХРАНЕНИЕ ЗАДАЧИ (новой или изменённой)
+// ЗБЕРЕЖЕННЯ ЗАДАЧІ (нової або зміненої)
 // ========================================
 
 taskForm.addEventListener("submit", async (event) => {
@@ -1546,7 +1546,7 @@ taskForm.addEventListener("submit", async (event) => {
         return;
     }
 
-    // Сначала сохраняем категорию/подкатегорию, которую ввели, но не нажали «Add»
+    // Спершу зберігаємо категорію/підкатегорію, яку ввели, але не натиснули «Add»
     for (const savePending of pendingInlineAdds) {
         await savePending();
     }
@@ -1566,14 +1566,14 @@ taskForm.addEventListener("submit", async (event) => {
 
         if (editingTask) {
 
-            // ---------- Редактирование ----------
+            // ---------- Редагування ----------
 
             const task = editingTask;
             const wasDone = task.status === "done";
 
             const response = await api(`/api/tasks/${task.id}`, {
                 method: "PATCH",
-                // В режиме анализа статус меняют кнопки «Почати / Завершити», а не это поле
+                // У режимі аналізу статус змінюють кнопки «Почати / Завершити», а не це поле
                 body: JSON.stringify(productivityOn ? fields : { ...fields, status: taskStatus.value })
             });
 
@@ -1596,7 +1596,7 @@ taskForm.addEventListener("submit", async (event) => {
 
         } else {
 
-            // ---------- Создание ----------
+            // ---------- Створення ----------
 
             const response = await api("/api/tasks", {
                 method: "POST",
@@ -1613,7 +1613,7 @@ taskForm.addEventListener("submit", async (event) => {
 
             closeTaskModal();
 
-            // Чтобы новая задача точно была видна
+            // Щоб нова задача точно була видна
             if (currentFilter !== "all" && currentFilter !== task.status) {
                 setFilter("all", false);
             }
@@ -1637,7 +1637,7 @@ taskForm.addEventListener("submit", async (event) => {
 
 
 // ========================================
-// ПОЛЬЗОВАТЕЛЬ И ВЫХОД
+// КОРИСТУВАЧ І ВИХІД
 // ========================================
 
 const userAvatar = document.querySelector("#userAvatar");
@@ -1647,7 +1647,7 @@ const logoutButton = document.querySelector("#logoutButton");
 
 let currentUser = null;
 
-// Аватарка: фото, если есть, иначе первая буква имени
+// Аватарка: фото, якщо є, інакше перша літера імені
 function paintAvatar(element, user) {
 
     const initial = (user.name || "U").trim().charAt(0).toUpperCase() || "U";
@@ -1681,7 +1681,7 @@ function showUser(user) {
 
 async function loadUser() {
 
-    // Сначала показываем то, что сохранено, потом уточняем у сервера
+    // Спершу показуємо те, що збережено, потім уточнюємо в сервера
     try {
         showUser(JSON.parse(localStorage.getItem("user")));
     } catch (error) { }
@@ -1691,7 +1691,7 @@ async function loadUser() {
         const user = await response.json();
         saveUser(user);
 
-        // Оформление берём только из свежего ответа сервера
+        // Оформлення беремо лише зі свіжої відповіді сервера
         loadAppearanceFromUser(user);
     } catch (error) {
         console.error(error);
@@ -1720,7 +1720,7 @@ logoutButton.addEventListener("click", async () => {
 
 
 // ========================================
-// ПРОФИЛЬ
+// ПРОФІЛЬ
 // ========================================
 
 const profilePhoto = document.querySelector("#profilePhoto");
@@ -1753,7 +1753,7 @@ function fillProfile(user) {
         ? `Member since ${new Date(user.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}`
         : "";
 
-    // Не перетираем имя, пока человек его редактирует
+    // Не перезаписуємо ім'я, поки людина його редагує
     if (document.activeElement !== profileName) {
         profileName.value = user.name;
     }
@@ -1777,7 +1777,7 @@ function showFormMessage(element, text, isError) {
     element.classList.toggle("error", Boolean(isError));
 }
 
-// Читаем ответ сервера и выбрасываем ошибку, если что-то не так
+// Читаємо відповідь сервера й викидаємо помилку, якщо щось не так
 async function readResult(response) {
     const data = await response.json();
     if (!response.ok) {
@@ -1793,7 +1793,7 @@ profilePhoto.addEventListener("click", () => photoInput.click());
 document.querySelector("#profileHeroPhoto").addEventListener("click", () => photoInput.click());
 uploadPhoto.addEventListener("click", () => photoInput.click());
 
-// Обрезаем фото до квадрата 256×256 прямо в браузере
+// Обрізаємо фото до квадрата 256×256 прямо в браузері
 function cropToSquare(file) {
 
     return new Promise((resolve, reject) => {
@@ -1889,7 +1889,7 @@ removePhoto.addEventListener("click", async () => {
 });
 
 
-// ---------- Имя ----------
+// ---------- Ім'я ----------
 
 nameForm.addEventListener("submit", async (event) => {
 
@@ -1954,7 +1954,7 @@ passwordForm.addEventListener("submit", async (event) => {
 
 
 // ========================================
-// DRAG & DROP — перенос дедлайна
+// DRAG & DROP — перенесення дедлайну
 // ========================================
 
 let draggedTask = null;
@@ -1965,7 +1965,7 @@ function makeDraggable(element, task) {
         draggedTask = task;
         event.dataTransfer.effectAllowed = "move";
         event.dataTransfer.setData("text/plain", String(task.id));
-        // Чтобы клик по дню не срабатывал от перетаскивания
+        // Щоб клік по дню не спрацьовував від перетягування
         event.stopPropagation();
         setTimeout(() => element.classList.add("dragging"), 0);
         document.body.classList.add("is-dragging");
@@ -2007,7 +2007,7 @@ async function moveDeadline(task, dateKey) {
 
     const oldDeadline = task.deadline;
 
-    // Сразу показываем изменение, не дожидаясь сервера
+    // Одразу показуємо зміну, не чекаючи на сервер
     task.deadline = dateKey;
     render();
 
@@ -2026,7 +2026,7 @@ async function moveDeadline(task, dateKey) {
 
     } catch (error) {
 
-        // Не получилось — возвращаем как было
+        // Не вийшло — повертаємо як було
         console.error(error);
         task.deadline = oldDeadline;
         render();
@@ -2037,7 +2037,7 @@ async function moveDeadline(task, dateKey) {
 
 
 // ========================================
-// УВЕДОМЛЕНИЕ ВНИЗУ ЭКРАНА
+// СПОВІЩЕННЯ ВНИЗУ ЕКРАНА
 // ========================================
 
 let toastTimer = null;
@@ -2061,18 +2061,18 @@ function showToast(text) {
 
 
 // ========================================
-// КОНФЕТТИ 🎉
+// КОНФЕТІ 🎉
 // ========================================
 
 function celebrate(task) {
 
-    // Все задачи этого дня выполнены?
+    // Усі задачі цього дня виконано?
     const sameDay = task.deadline
         ? tasks.filter(t => t.deadline === task.deadline)
         : [];
     const dayDone = sameDay.length > 1 && sameDay.every(t => t.status === "done");
 
-    // Вообще все задачи выполнены?
+    // Узагалі всі задачі виконано?
     const allDone = tasks.length > 1 && tasks.every(t => t.status === "done");
 
     if (allDone) {
@@ -2089,7 +2089,7 @@ function celebrate(task) {
 
 function confetti(amount) {
 
-    // Уважаем настройку "уменьшить анимацию"
+    // Поважаємо налаштування "зменшити анімацію"
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         return;
     }
@@ -2103,7 +2103,7 @@ function confetti(amount) {
     const ctx = canvas.getContext("2d");
     const colors = ["#7c5cff", "#a98cff", "#55a9ff", "#51d48a", "#d8b35c", "#ff6b6b", "#ffffff"];
 
-    // Частицы вылетают снизу из двух углов
+    // Частинки вилітають знизу з двох кутів
     const pieces = [];
     for (let i = 0; i < amount; i++) {
         const fromLeft = i % 2 === 0;
@@ -2128,8 +2128,8 @@ function confetti(amount) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         pieces.forEach(p => {
-            p.vy += 0.35;      // гравитация
-            p.vx *= 0.99;      // сопротивление воздуха
+            p.vy += 0.35;      // гравітація
+            p.vx *= 0.99;      // опір повітря
             p.x += p.vx;
             p.y += p.vy;
             p.angle += p.spin;
@@ -2155,12 +2155,12 @@ function confetti(amount) {
 
 
 // ========================================
-// ЭКСПОРТ В GOOGLE CALENDAR / OUTLOOK (.ics)
+// ЕКСПОРТ У GOOGLE CALENDAR / OUTLOOK (.ics)
 // ========================================
 
 const exportIcs = document.querySelector("#exportIcs");
 
-// Экранирование текста для формата iCalendar
+// Екранування тексту для формату iCalendar
 function icsText(text) {
     return String(text || "")
         .replace(/\\/g, "\\\\")
@@ -2190,7 +2190,7 @@ exportIcs.addEventListener("click", () => {
 
     withDeadline.forEach(task => {
 
-        // Событие на весь день: DTEND = следующий день
+        // Подія на весь день: DTEND = наступний день
         const start = task.deadline.replace(/-/g, "");
         const d = fromDateKey(task.deadline);
         const end = toDateKey(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1)).replace(/-/g, "");
@@ -2228,7 +2228,7 @@ exportIcs.addEventListener("click", () => {
 
 
 // ========================================
-// ЗАЩИТА ОТ HTML
+// ЗАХИСТ ВІД HTML
 // ========================================
 
 function escapeHtml(text) {

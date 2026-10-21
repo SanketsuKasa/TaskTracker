@@ -9,13 +9,13 @@
 
     <link rel="stylesheet" href="style.css">
 
-    <!-- Сохранённая тема — применяем сразу, до отрисовки -->
+    <!-- Збережена тема — застосовуємо одразу, до малювання -->
     <script src="theme.js"></script>
 </head>
 
 <body>
 
-    <!-- Фон: цвет/фото, затемнение, неоновый график, шармики -->
+    <!-- Фон: колір/фото, затемнення, неоновий графік, фігурки -->
     <div class="bg-layer" aria-hidden="true">
         <div class="bg-base" id="bgBase"></div>
         <div class="bg-dim" id="bgDim"></div>
@@ -23,12 +23,12 @@
         <div class="charm-layer" id="charmLayer" style="display:none"></div>
     </div>
 
-    <!-- Увеличенный шармик -->
+    <!-- Збільшена фігурка -->
     <div class="charm-zoom" id="charmZoom"></div>
 
     <div class="app">
 
-        <!-- Боковое меню -->
+        <!-- Бічне меню -->
         <aside class="sidebar">
 
             <div class="logo">
@@ -118,7 +118,7 @@
         </aside>
 
 
-        <!-- Основная часть -->
+        <!-- Основна частина -->
         <main class="main" id="main" data-view="dashboard">
 
             <header class="header">
@@ -201,7 +201,7 @@
 
 
             <!-- ======================================== -->
-            <!-- ЗАДАЧИ -->
+            <!-- ЗАДАЧІ -->
             <!-- ======================================== -->
 
             <div class="content-grid">
@@ -244,14 +244,14 @@
                 </div>
 
 
-                <!-- Выбранный день календаря -->
+                <!-- Вибраний день календаря -->
                 <div class="date-chip" id="dateChip">
                     <span id="dateChipText"></span>
                     <button type="button" id="clearDate" title="Show all dates">×</button>
                 </div>
 
 
-                <!-- Поиск -->
+                <!-- Пошук -->
                 <div class="search-row">
 
                     <div class="search">
@@ -270,11 +270,11 @@
                 </div>
 
 
-                <!-- Карточки задач -->
+                <!-- Картки задач -->
                 <div class="task-list">
 
                     <!--
-                        Задачи загружаются
+                        Задачі завантажуються
                         через app.js
                     -->
 
@@ -290,7 +290,7 @@
 
 
             <!-- ======================================== -->
-            <!-- КАЛЕНДАРЬ -->
+            <!-- КАЛЕНДАР -->
             <!-- ======================================== -->
 
             <section class="calendar-card" id="calendarCard">
@@ -346,7 +346,7 @@
 
 
             <!-- ======================================== -->
-            <!-- ПРОФИЛЬ (просмотр) -->
+            <!-- ПРОФІЛЬ (перегляд) -->
             <!-- ======================================== -->
 
             <section class="profile" id="profile">
@@ -373,7 +373,7 @@
 
                 </div>
 
-                <!-- Статистика профиля -->
+                <!-- Статистика профілю -->
                 <div class="profile-stats">
                     <div class="profile-stat"><strong id="pTotal">0</strong><span>Tasks</span></div>
                     <div class="profile-stat"><strong id="pDone">0</strong><span>Completed</span></div>
@@ -385,7 +385,7 @@
 
 
             <!-- ======================================== -->
-            <!-- НАСТРОЙКИ -->
+            <!-- НАЛАШТУВАННЯ -->
             <!-- ======================================== -->
 
             <section class="settings" id="settings">
@@ -399,7 +399,7 @@
                 </nav>
 
 
-                <!-- ---------- Аккаунт ---------- -->
+                <!-- ---------- Акаунт ---------- -->
                 <div class="settings-panel active" data-panel="account">
 
                     <!-- Фото -->
@@ -425,7 +425,7 @@
 
                     <div class="profile-grid">
 
-                        <!-- Имя -->
+                        <!-- Ім'я -->
                         <form class="profile-card" id="nameForm">
                             <h3>Personal info</h3>
 
@@ -469,19 +469,19 @@
                 </div>
 
 
-                <!-- ---------- Внешний вид ---------- -->
+                <!-- ---------- Зовнішній вигляд ---------- -->
                 <div class="settings-panel" data-panel="appearance">
 
                     <div class="appearance-status" id="appearanceStatus" aria-live="polite"></div>
 
-                    <!-- Готовые темы -->
+                    <!-- Готові теми -->
                     <div class="profile-card">
                         <h3>Theme</h3>
                         <p class="card-hint">Pick a ready-made mood or fine-tune every color below.</p>
                         <div class="theme-presets" id="themePresets"></div>
                     </div>
 
-                    <!-- Свои цвета -->
+                    <!-- Свої кольори -->
                     <div class="profile-card">
                         <div class="card-title-row">
                             <h3>Colors</h3>
@@ -496,7 +496,7 @@
                         </div>
                     </div>
 
-                    <!-- Цвета графиков -->
+                    <!-- Кольори графіків -->
                     <div class="profile-card">
                         <div class="card-title-row">
                             <h3>Chart colors</h3>
@@ -555,7 +555,7 @@
                         </div>
                     </div>
 
-                    <!-- Шармики -->
+                    <!-- Фігурки -->
                     <div class="profile-card">
                         <label class="switch-row">
                             <span>
@@ -593,7 +593,7 @@
                         </div>
                     </div>
 
-                    <!-- Неоновый график -->
+                    <!-- Неоновий графік -->
                     <div class="profile-card">
                         <label class="switch-row">
                             <span>
@@ -619,7 +619,7 @@
                 </div>
 
 
-                <!-- ---------- Категории ---------- -->
+                <!-- ---------- Категорії ---------- -->
                 <div class="settings-panel" data-panel="categories">
                     <div class="profile-card categories-card">
                         <h3>Categories</h3>
@@ -637,7 +637,7 @@
                 </div>
 
 
-                <!-- ---------- Продуктивность ---------- -->
+                <!-- ---------- Продуктивність ---------- -->
                 <div class="settings-panel" data-panel="productivity">
 
                     <div class="profile-card productivity-card">
@@ -665,7 +665,7 @@
                     </div>
 
 
-                    <!-- ======== Графики и аналитика ======== -->
+                    <!-- ======== Графіки та аналітика ======== -->
 
                     <div class="analytics prod-only" id="analytics">
 
@@ -855,7 +855,7 @@
 
 
     <!-- ======================================== -->
-    <!-- ОКНО СОЗДАНИЯ ЗАДАЧИ -->
+    <!-- ВІКНО СТВОРЕННЯ ЗАДАЧІ -->
     <!-- ======================================== -->
 
     <div class="modal-overlay" id="taskModal">
@@ -889,7 +889,7 @@
 
             <form id="taskForm">
 
-                <!-- Название -->
+                <!-- Назва -->
 
                 <div class="form-group">
 
@@ -907,7 +907,7 @@
                 </div>
 
 
-                <!-- Описание -->
+                <!-- Опис -->
 
                 <div class="form-group">
 
@@ -923,7 +923,7 @@
                 </div>
 
 
-                <!-- Категория и подкатегория -->
+                <!-- Категорія та підкатегорія -->
 
                 <div class="form-row">
 
@@ -1078,7 +1078,7 @@
                 </div>
 
 
-                <!-- Статус (только при редактировании) -->
+                <!-- Статус (лише під час редагування) -->
 
                 <div class="form-group edit-only status-group">
 
@@ -1234,7 +1234,7 @@
 
 
     <!-- ======================================== -->
-    <!-- ОКНО ПОДТВЕРЖДЕНИЯ УДАЛЕНИЯ -->
+    <!-- ВІКНО ПІДТВЕРДЖЕННЯ ВИДАЛЕННЯ -->
     <!-- ======================================== -->
 
     <div class="modal-overlay" id="deleteModal">
@@ -1249,7 +1249,7 @@
                 This action can't be undone.
             </p>
 
-            <!-- Превью задачи -->
+            <!-- Прев'ю задачі -->
             <div class="delete-preview">
                 <strong id="deleteTaskTitle"></strong>
                 <div class="delete-preview-meta" id="deleteTaskMeta"></div>
@@ -1272,7 +1272,7 @@
     </div>
 
 
-    <!-- Подсказка для графиков -->
+    <!-- Підказка для графіків -->
     <div class="chart-tooltip" id="chartTooltip" role="tooltip"></div>
 
 

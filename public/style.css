@@ -1,14 +1,14 @@
 /* ========================================
-   ТЕМА: все основные цвета — переменные.
-   Settings → Appearance меняет их на лету.
+   ТЕМА: усі основні кольори — змінні.
+   Settings → Appearance змінює їх на льоту.
 ======================================== */
 
 :root {
-    --bg: #0d0f14;               /* фон страницы */
-    --bg-deep: #0d0f14;          /* поля ввода, самые тёмные места */
-    --surface: #11141b;          /* панели */
-    --surface-2: #151820;        /* карточки внутри панелей */
-    --surface-3: #1a1d27;        /* наведение */
+    --bg: #0d0f14;               /* фон сторінки */
+    --bg-deep: #0d0f14;          /* поля введення, найтемніші місця */
+    --surface: #11141b;          /* панелі */
+    --surface-2: #151820;        /* картки всередині панелей */
+    --surface-3: #1a1d27;        /* наведення */
     --border: #222631;
     --border-strong: #292e39;
     --accent: #7c5cff;
@@ -852,7 +852,7 @@ nav {
 
 
 /* ========================================
-   VIEWS (что показывать на какой странице)
+   VIEWS (що показувати на якій сторінці)
 ======================================== */
 
 .content-grid {
@@ -862,7 +862,7 @@ nav {
     align-items: start;
 }
 
-/* All / In Progress / Completed — только список задач */
+/* All / In Progress / Completed — лише список задач */
 .main[data-view="all"] .stats,
 .main[data-view="progress"] .stats,
 .main[data-view="done"] .stats,
@@ -879,7 +879,7 @@ nav {
     grid-template-columns: 1fr;
 }
 
-/* Calendar — большой календарь сверху, задачи под ним */
+/* Calendar — великий календар зверху, задачі під ним */
 .main[data-view="calendar"] .content-grid {
     grid-template-columns: 1fr;
 }
@@ -890,7 +890,7 @@ nav {
 
 
 /* ========================================
-   ДАТА / ПУСТОЙ СПИСОК / ДЕДЛАЙН
+   ДАТА / ПОРОЖНІЙ СПИСОК / ДЕДЛАЙН
 ======================================== */
 
 .date-chip {
@@ -1202,7 +1202,7 @@ nav {
 }
 
 
-/* BIG CALENDAR (страница Calendar) */
+/* ВЕЛИКИЙ КАЛЕНДАР (сторінка Calendar) */
 
 .main[data-view="calendar"] .calendar-card {
     padding: 28px;
@@ -1364,7 +1364,7 @@ nav {
     cursor: grab;
 }
 
-/* Во время перетаскивания календарь подсвечивается */
+/* Під час перетягування календар підсвічується */
 body.is-dragging .calendar-day:not(.other-month) {
     border-style: dashed;
     border-color: var(--border-strong);
@@ -1548,7 +1548,7 @@ body.is-dragging .calendar-day.drop-over {
 }
 
 
-/* Заголовок маленького календаря не должен переноситься некрасиво */
+/* Заголовок маленького календаря не повинен некрасиво переноситися */
 .calendar-header {
     flex-wrap: wrap;
 }
@@ -1574,7 +1574,7 @@ body.is-dragging .calendar-day.drop-over {
 
 
 /* ========================================
-   LOGIN: ЭКРАНЫ (вход / регистрация / код / сброс)
+   LOGIN: ЕКРАНИ (вхід / реєстрація / код / скидання)
 ======================================== */
 
 .auth-card[data-screen="login"] [class*="only-"]:not(.only-login),
@@ -1654,7 +1654,7 @@ body.is-dragging .calendar-day.drop-over {
 
 
 /* ========================================
-   SIDEBAR: ссылка на профиль и фото
+   SIDEBAR: посилання на профіль і фото
 ======================================== */
 
 .user-link {
@@ -2021,7 +2021,7 @@ body.is-dragging .calendar-day.drop-over {
     outline-offset: 2px;
 }
 
-/* Карточка исчезает */
+/* Картка зникає */
 .task-card.removing {
     animation: removeCard 0.3s ease forwards;
 }
@@ -2055,7 +2055,7 @@ body.is-dragging .calendar-day.drop-over {
 
 
 /* ========================================
-   КАТЕГОРИИ И ПОДКАТЕГОРИИ
+   КАТЕГОРІЇ ТА ПІДКАТЕГОРІЇ
 ======================================== */
 
 .pink-tag {
@@ -2171,7 +2171,7 @@ body.is-dragging .calendar-day.drop-over {
     display: none;
 }
 
-/* Поле статуса — только в режиме редактирования */
+/* Поле статусу — лише в режимі редагування */
 .edit-only {
     display: none;
 }
@@ -2180,7 +2180,7 @@ body.is-dragging .calendar-day.drop-over {
     display: block;
 }
 
-/* Кнопка редактирования на карточке */
+/* Кнопка редагування на картці */
 .more.edit-button:hover {
     color: var(--accent-lighter);
     background: var(--accent-bg);
@@ -2191,7 +2191,7 @@ body.is-dragging .calendar-day.drop-over {
 }
 
 
-/* ---------- Поиск + фильтр по категории ---------- */
+/* ---------- Пошук + фільтр за категорією ---------- */
 
 .search-row {
     display: flex;
@@ -2242,7 +2242,7 @@ body.is-dragging .calendar-day.drop-over {
 }
 
 
-/* ---------- Категории в профиле ---------- */
+/* ---------- Категорії в профілі ---------- */
 
 .categories-card {
     grid-column: 1 / -1;
@@ -2371,14 +2371,14 @@ body.is-dragging .calendar-day.drop-over {
     max-width: 420px;
 }
 
-/* Окно задачи не вылезает за экран */
+/* Вікно задачі не виходить за межі екрана */
 .modal {
     max-height: calc(100vh - 40px);
     overflow-y: auto;
 }
 
 
-/* Базовые категории и переименование */
+/* Базові категорії та перейменування */
 
 .base-badge {
     margin-left: auto;
@@ -2567,7 +2567,7 @@ body.is-dragging .calendar-day.drop-over {
     font-weight: 600;
 }
 
-/* Кнопка удаления подкатегории в окне задачи */
+/* Кнопка видалення підкатегорії у вікні задачі */
 .icon-button.danger {
     color: var(--text-muted);
     display: flex;
@@ -2615,7 +2615,7 @@ body.is-dragging .calendar-day.drop-over {
 
 }
 
-/* Вкладки — в ряд (не наследуем стиль бокового меню) */
+/* Вкладки — в ряд (не успадковуємо стиль бічного меню) */
 nav.settings-tabs {
     flex-direction: row;
 }
@@ -2628,10 +2628,10 @@ nav.settings-tabs {
 
 
 /* ========================================
-   АНАЛИЗ ПРОДУКТИВНОСТИ
+   АНАЛІЗ ПРОДУКТИВНОСТІ
 ======================================== */
 
-/* Всё «продуктивное» видно только когда анализ включён */
+/* Усе «продуктивне» видно лише коли аналіз увімкнено */
 .prod-only {
     display: none !important;
 }
@@ -2641,7 +2641,7 @@ body.productivity-on .prod-only {
 }
 
 
-/* В режиме анализа статус меняют кнопки, а не выпадающий список */
+/* У режимі аналізу статус змінюють кнопки, а не випадний список */
 body.productivity-on #taskModal.editing .status-group {
     display: none;
 }
@@ -2656,7 +2656,7 @@ body.productivity-on #taskModal.editing .status-group {
 }
 
 
-/* ---------- Звёзды сложности ---------- */
+/* ---------- Зірки складності ---------- */
 
 .stars {
     display: flex;
@@ -2692,7 +2692,7 @@ body.productivity-on #taskModal.editing .status-group {
 }
 
 
-/* ---------- Сегментные кнопки ---------- */
+/* ---------- Сегментні кнопки ---------- */
 
 .segmented {
     display: flex;
@@ -2740,7 +2740,7 @@ body.productivity-on #taskModal.editing .status-group {
 }
 
 
-/* ---------- Оценка времени ---------- */
+/* ---------- Оцінка часу ---------- */
 
 .duration-input {
     display: flex;
@@ -2789,7 +2789,7 @@ body.productivity-on #taskModal.editing .status-group {
 }
 
 
-/* ---------- Дополнительные поля ---------- */
+/* ---------- Додаткові поля ---------- */
 
 .more-details {
     margin-bottom: 18px;
@@ -2822,7 +2822,7 @@ body.productivity-on #taskModal.editing .status-group {
 }
 
 
-/* ---------- Карточка: строка работы ---------- */
+/* ---------- Картка: рядок роботи ---------- */
 
 .status-column {
     display: flex;
@@ -3019,7 +3019,7 @@ body.productivity-on #taskModal.editing .status-group {
 }
 
 
-/* ---------- Настройки: переключатель ---------- */
+/* ---------- Налаштування: перемикач ---------- */
 
 .switch-row {
     position: relative;
@@ -3156,7 +3156,7 @@ body:not(.productivity-on) .prod-features {
 
 
 /* ========================================
-   ПРОГНОЗ ПРОГРАММЫ (в окне задачи)
+   ПРОГНОЗ ПРОГРАМИ (у вікні задачі)
 ======================================== */
 
 .forecast {
@@ -3234,7 +3234,7 @@ body:not(.productivity-on) .prod-features {
 
 
 /* ========================================
-   АНАЛИТИКА (Settings → Productivity)
+   АНАЛІТИКА (Settings → Productivity)
 ======================================== */
 
 .analytics {
@@ -3441,7 +3441,7 @@ body.productivity-on .analytics.prod-only {
 }
 
 
-/* ---------- Как вы работаете ---------- */
+/* ---------- Як ви працюєте ---------- */
 
 .style-item {
     display: flex;
@@ -3505,7 +3505,7 @@ body.productivity-on .analytics.prod-only {
 }
 
 
-/* ---------- Баланс жизни ---------- */
+/* ---------- Баланс життя ---------- */
 
 .balance-wrap {
     display: flex;
@@ -3584,7 +3584,7 @@ body.productivity-on .analytics.prod-only {
 }
 
 
-/* ---------- Подсказка ---------- */
+/* ---------- Підказка ---------- */
 
 .chart-tooltip {
     position: fixed;
@@ -3677,7 +3677,7 @@ body.productivity-on .analytics.prod-only {
     }
 }
 
-/* Основная колонка может сжиматься (иначе на телефоне страница шире экрана) */
+/* Основна колонка може стискатися (інакше на телефоні сторінка ширша за екран) */
 .main {
     min-width: 0;
 }
@@ -3704,7 +3704,7 @@ body.productivity-on .analytics.prod-only {
 }
 
 
-/* ---------- Линейный график тренда ---------- */
+/* ---------- Лінійний графік тренду ---------- */
 
 .trend-chart .trend-line {
     fill: none;
@@ -3789,7 +3789,7 @@ body.productivity-on .analytics.prod-only {
     opacity: 0.25;
 }
 
-/* ---------- Переключатели графика тренда ---------- */
+/* ---------- Перемикачі графіка тренду ---------- */
 
 .trend-controls {
     display: flex;
@@ -3828,7 +3828,7 @@ body.productivity-on .analytics.prod-only {
 
 
 /* ========================================
-   ФОН: слои за интерфейсом
+   ФОН: шари за інтерфейсом
 ======================================== */
 
 .bg-layer {
@@ -3859,7 +3859,7 @@ body.productivity-on .analytics.prod-only {
     z-index: 1;
 }
 
-/* Полупрозрачные панели: размытие того, что под ними */
+/* Напівпрозорі панелі: розмиття того, що під ними */
 .sidebar,
 .stat-card,
 .tasks-section,
@@ -3888,7 +3888,7 @@ body.productivity-on .analytics.prod-only {
 }
 
 
-/* ---------- Неоновый график на фоне ---------- */
+/* ---------- Неоновий графік на фоні ---------- */
 
 .bg-glow {
     position: absolute;
@@ -3969,7 +3969,7 @@ body.productivity-on .analytics.prod-only {
 }
 
 
-/* ---------- Шармики ---------- */
+/* ---------- Фігурки ---------- */
 
 .charm-layer {
     position: absolute;
@@ -4060,7 +4060,7 @@ body.productivity-on .analytics.prod-only {
 }
 
 
-/* ---------- Увеличенный шармик ---------- */
+/* ---------- Збільшена фігурка ---------- */
 
 .charm-zoom {
     position: fixed;
@@ -5259,7 +5259,7 @@ button.wish-check:hover {
 }
 
 
-/* ---------- Поправки прогноза (знакомство, нагрузка, энергия, тип) ---------- */
+/* ---------- Поправки прогнозу (знайомство, навантаження, енергія, тип) ---------- */
 
 .forecast-factors {
     display: flex;
